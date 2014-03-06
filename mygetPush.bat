@@ -1,1 +1,0 @@
-nuget push *.nupkg %MYGET_API_KEY% -Source %MYGET_REPO_URL%
