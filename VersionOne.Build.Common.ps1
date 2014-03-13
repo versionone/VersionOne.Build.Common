@@ -54,7 +54,9 @@ task generateNugetPackage{
 }
 
 task pushMyget -depends GenerateNugetPackage{
-	exec { .\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL }
+	if ($env:MYGET_BYPASS -ne "true") {
+		exec { .\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL 
+	}
 }
 
 task installNunitRunners{
