@@ -6,6 +6,7 @@
 #groups of tasks
 task default -depends RestoreAndUpdatePackages,Build,runUnitTests
 task jenkins -depends default,PushMyget
+task jenkinsWithAzurePublish -depends default,PushMyget,publish
 
 #tasks
 task validateInput {
