@@ -67,9 +67,7 @@ task runUnitTests{
 	$testRunner = Get-NewestFilePath "nunit-console-x86.exe"
 	$configuration = $config.configuration
 	
-	(gci -filter *.Tests) |
-	foreach { gci -filter ($_.Name + "\bin\$configuration\*.Tests.dll") } |
-	foreach {
+	(ls -r *.Tests.dll) | foreach { gci -filter ($_.Name + "\bin\$configuration\*.Tests.dll") } | foreach {
 		$fullName = $_.FullName 
 		exec { iex "$testRunner $fullName" }		
 	}	
