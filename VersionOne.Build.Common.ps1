@@ -55,7 +55,7 @@ task generateNugetPackage{
 
 task pushMyget -depends GenerateNugetPackage{
 	if ($env:MYGET_BYPASS -ne "true") {
-		exec { .\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL 
+		exec { .\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL }
 	}
 }
 
