@@ -67,9 +67,9 @@ task runUnitTests{
 	$testRunner = Get-NewestFilePath "nunit-console-x86.exe"
 	$configuration = $config.configuration
 	
-	(ls -r *.Tests.dll) | foreach { gci -filter ($_.Name + "\bin\$configuration\*.Tests.dll") } | foreach {
-		$fullName = $_.FullName 
-		exec { iex "$testRunner $fullName" }		
+	(ls -r *.Tests.dll) | where { $_.FullName -like "*\bin\Release\*.Tests.dll" } | foreach {
+		$fullName = $_.FullName
+		exec { iex "$testRunner $fullName" }
 	}	
 }
 
