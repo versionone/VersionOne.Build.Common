@@ -1,18 +1,19 @@
-﻿properties {	
+﻿
+properties {
 	$config = Get-ConfigObject
-	$version = $config.version + '.' + (Get-EnvironmentVariableOrDefault "BUILD_NUMBER" $config.buildNumber)
 }
 
 #groups of tasks
-task default -depends RestoreAndUpdatePackages,Build,runUnitTests
-task jenkins -depends default,PushMyget
+task default -depends local
+task local -depends restoreAndUpdatePackages,build,runUnitTests,runExtensions
+task jenkins -depends restoreAndUpdatePackages,build,runUnitTests,pushMyget,runExtensions
 
 #tasks
 task validateInput {
 	#TODO: validate build.properties.json
 }
 
-task build -depends clean,generateAssemblyInfo {
+task build -depends clean,setAssemblyInfo {
 	$solution = $config.solution
 	$configuration = $config.configuration
 	$platform = $config.platform
@@ -37,8 +38,8 @@ task restoreAndUpdatePackages {
 	exec { .\\.nuget\nuget.exe update  $config.solution -Source $config.nugetSources }	
 }
  
-task generateAssemblyInfo{	
-	Write-AssemblyInfo
+task setAssemblyInfo{	
+	Update-AssemblyInfo
 }
 
 task setUpNuget {
@@ -52,10 +53,8 @@ task generateNugetPackage{
 	exec { .\\.nuget\nuget.exe pack $project -Verbosity Detailed -Version $version -prop Configuration=$configuration }
 }
 
-task pushMyget -depends GenerateNugetPackage{
-	if ($env:MYGET_BYPASS -ne "true") {
-		exec { .\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL }
-	}
+task pushMyget -depends GenerateNugetPackage{	
+	exec { .\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL }	
 }
 
 task installNunitRunners{
@@ -69,7 +68,16 @@ task runUnitTests{
 	(ls -r *.Tests.dll) | where { $_.FullName -like "*\bin\Release\*.Tests.dll" } | foreach {
 		$fullName = $_.FullName
 		exec { iex "$testRunner $fullName" }
-	}	
+	}
+}
+
+task runExtensions{
+	ls build-ex.*.ps1 | sort | foreach{		
+		if ($_ -like "*.script.*") { 
+			Write-Host "The next extension has been loaded: $_ "  -ForegroundColor green
+			& $_
+		} 
+	}
 }
 
 #helpers
@@ -104,7 +112,7 @@ function Get-NugetBinary (){
 }
 
 
-function Write-AssemblyInfo(){
+function Update-AssemblyInfo(){
 	
 	$version = $config.major + "." + $config.minor + "." + (get-date -format "yyMM.HHmm")
 	$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
@@ -126,8 +134,7 @@ function Update-Assemblies() {
         $files
 	)	
 	process
-	{
-		$files.Length
+	{		
 		foreach ($file in $files)
 		{
 			Write-Host Updating file $file.FullName

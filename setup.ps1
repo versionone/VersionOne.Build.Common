@@ -29,24 +29,12 @@ function ImportPsake(){
 	Import-Module $psakePath
 }
 
-function RunBuildExtensions() {
-	ls build-ex.*.ps1 | sort | foreach-object -process {
-		if ($psake.build_success -eq $false) { 
-			throw "Build extension failed."			
-		}
-		if ($_ -like "*.script.*") { & $_ } 
-	}
-	# TODO add Invoke-psake for *.task.* match
-}
-
 try{
 	DownloadNuget
 	DownloadAndImportModules
 	ImportPsake
 	CopyCommonToRoot	
-	Invoke-psake VersionOne.Build.Common.ps1 ($tasks.Split(',').Trim())
-	# Run extensions that are specific to this build
-	RunBuildExtensions
+	Invoke-psake VersionOne.Build.Common.ps1 ($tasks.Split(',').Trim())	
 }
 Catch {
 	throw "Build failed."
