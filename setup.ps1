@@ -1,6 +1,6 @@
 ﻿param(
-    [alias("env")]
-    $environment = ''
+    [alias("t")]
+    [string] $tasks = ''
 )
 
 function GetModulePath([string]$module){
@@ -43,8 +43,8 @@ try{
 	DownloadNuget
 	DownloadAndImportModules
 	ImportPsake
-	CopyCommonToRoot
-	Invoke-psake VersionOne.Build.Common.ps1 $environment
+	CopyCommonToRoot	
+	Invoke-psake VersionOne.Build.Common.ps1 ($tasks.Split(',').Trim())
 	# Run extensions that are specific to this build
 	RunBuildExtensions
 }
