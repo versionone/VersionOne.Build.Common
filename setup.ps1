@@ -31,7 +31,9 @@ function ImportPsake(){
 
 function RunBuildExtensions() {
 	ls build-ex.*.ps1 | sort | foreach-object -process {
-		if ($psake.build_success -eq $false) { exit 1 }
+		if ($psake.build_success -eq $false) { 
+			throw "Build extension failed."			
+		}
 		if ($_ -like "*.script.*") { & $_ } 
 	}
 	# TODO add Invoke-psake for *.task.* match
@@ -47,13 +49,10 @@ try{
 	RunBuildExtensions
 }
 Catch {
-        throw "build failed"
-        exit 1
+	throw "Build failed."
 }
 Finally {
 	if ($psake.build_success -eq $false) {
-    	exit 1
-	} else {
-    	exit 0
+		throw "Build failed."    	
 	}
 }
