@@ -61,7 +61,7 @@ task installNunitRunners{
 	exec { .\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages }
 }
 
-task runUnitTests{
+task runUnitTests -depends installNunitRunners{
 	$testRunner = Get-NewestFilePath "nunit-console-x86.exe"
 	$configuration = $config.configuration
 	
