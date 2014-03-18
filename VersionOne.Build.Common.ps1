@@ -1,7 +1,7 @@
 ﻿
 properties {
 	$config = Get-ConfigObject
-	$version = $config.major + "." + $config.minor + "." + (get-date -format "yyMM.HHmm")
+	$version = Get-Version
 }
 
 #groups of tasks
@@ -14,14 +14,14 @@ task validateInput {
 	#TODO: validate build.properties.json
 }
 
-task build -depends clean,setAssemblyInfo {
+task build -depends clean,setAssemblyInfo {	
 	$solution = $config.solution
 	$configuration = $config.configuration
 	$platform = $config.platform
 	exec { msbuild $solution -t:Build -p:Configuration=$configuration "-p:Platform=$platform" }	
 }
  
-task clean {
+task clean {	
 	$solution = $config.solution
 	$configuration = $config.configuration
 	$platform = $config.platform
@@ -84,23 +84,23 @@ task runExtensions{
 #helpers
 
 function Get-ConfigObject(){
-	return Get-Content .\build.properties.json -Raw | ConvertFrom-Json	
+	Get-Content .\build.properties.json -Raw | ConvertFrom-Json	
 }
 
 function Get-EnvironmentVariableOrDefault([string] $variable, [string]$default){		
 	if([Environment]::GetEnvironmentVariable($variable))
 	{
-		return [Environment]::GetEnvironmentVariable($variable)
+		[Environment]::GetEnvironmentVariable($variable)
 	}
 	else
 	{
-		return $default
+		$default
 	}
 }
 
 function Get-NewestFilePath([string]$file){
 	$paths = @(Get-ChildItem -r -Path packages -filter $file | Sort-Object FullName  -descending)
-	return $paths[0].FullName
+	$paths[0].FullName
 }
 
 function New-NugetDirectory(){
@@ -148,4 +148,12 @@ function Update-Assemblies() {
 			move-item $tmp $file.FullName -force			
 		}
 	}    
+}
+
+function Get-Version(){
+	$yearMonthDay = (get-date).ToUniversalTime().ToString("yyMMdd")
+	$hourMinute = (get-date).ToUniversalTime().ToString("HHmm")	
+	$buildNumber = (Get-EnvironmentVariableOrDefault("BUILD_NUMBER",$hourMinute))
+	
+	$config.major + "." + $config.minor + "." + $yearMonthDay + "." + $buildNumber	
 }
