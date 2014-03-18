@@ -1,6 +1,7 @@
 ﻿
 properties {
 	$config = Get-ConfigObject
+	$version = Get-Version
 }
 
 #groups of tasks
@@ -13,14 +14,14 @@ task validateInput {
 	#TODO: validate build.properties.json
 }
 
-task build -depends clean,setAssemblyInfo {
+task build -depends clean,setAssemblyInfo {	
 	$solution = $config.solution
 	$configuration = $config.configuration
 	$platform = $config.platform
 	exec { msbuild $solution -t:Build -p:Configuration=$configuration "-p:Platform=$platform" }	
 }
  
-task clean {
+task clean {	
 	$solution = $config.solution
 	$configuration = $config.configuration
 	$platform = $config.platform
@@ -61,7 +62,7 @@ task installNunitRunners{
 	exec { .\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages }
 }
 
-task runUnitTests{
+task runUnitTests -depends installNunitRunners{
 	$testRunner = Get-NewestFilePath "nunit-console-x86.exe"
 	$configuration = $config.configuration
 	
@@ -83,23 +84,23 @@ task runExtensions{
 #helpers
 
 function Get-ConfigObject(){
-	return Get-Content .\build.properties.json -Raw | ConvertFrom-Json	
+	Get-Content .\build.properties.json -Raw | ConvertFrom-Json	
 }
 
 function Get-EnvironmentVariableOrDefault([string] $variable, [string]$default){		
 	if([Environment]::GetEnvironmentVariable($variable))
 	{
-		return [Environment]::GetEnvironmentVariable($variable)
+		[Environment]::GetEnvironmentVariable($variable)
 	}
 	else
 	{
-		return $default
+		$default
 	}
 }
 
 function Get-NewestFilePath([string]$file){
 	$paths = @(Get-ChildItem -r -Path packages -filter $file | Sort-Object FullName  -descending)
-	return $paths[0].FullName
+	$paths[0].FullName
 }
 
 function New-NugetDirectory(){
@@ -113,8 +114,6 @@ function Get-NugetBinary (){
 
 
 function Update-AssemblyInfo(){
-	
-	$version = $config.major + "." + $config.minor + "." + (get-date -format "yyMM.HHmm")
 	$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
 	$versionAssembly = 'AssemblyVersion("' + $version + '")';
 	$versionFilePattern = 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
@@ -149,4 +148,21 @@ function Update-Assemblies() {
 			move-item $tmp $file.FullName -force			
 		}
 	}    
+}
+
+function Get-Version(){	
+	#TODO: refactor all this
+	$year = (get-date).ToUniversalTime().ToString("yy")	
+	$hourMinute = (get-date).ToUniversalTime().ToString("HHmm")	
+	$buildNumber = Get-EnvironmentVariableOrDefault "BUILD_NUMBER" $hourMinute
+	
+	$dayOfyear = (get-date).DayOfYear
+	if(([string]$dayOfyear).Length -eq 1){
+		$dayOfyear=  "00" + $dayOfyear
+	}
+	elseif(([string]$dayOfyear).Length -eq 2){
+		$dayOfyear = "0" + $dayOfyear
+	}
+	
+	$config.major + "." + $config.minor + "." + $year + $dayOfyear + "." + $buildNumber	
 }
