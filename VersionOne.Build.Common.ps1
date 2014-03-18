@@ -150,10 +150,19 @@ function Update-Assemblies() {
 	}    
 }
 
-function Get-Version(){
-	$yearMonthDay = (get-date).ToUniversalTime().ToString("yyMMdd")
+function Get-Version(){	
+	#TODO: refactor all this
+	$year = (get-date).ToUniversalTime().ToString("yy")	
 	$hourMinute = (get-date).ToUniversalTime().ToString("HHmm")	
-	$buildNumber = (Get-EnvironmentVariableOrDefault("BUILD_NUMBER",$hourMinute))
+	$buildNumber = Get-EnvironmentVariableOrDefault "BUILD_NUMBER" $hourMinute
 	
-	$config.major + "." + $config.minor + "." + $yearMonthDay + "." + $buildNumber	
+	$dayOfyear = (get-date).DayOfYear
+	if(([string]$dayOfyear).Length -eq 1){
+		$dayOfyear=  "00" + $dayOfyear
+	}
+	elseif(([string]$dayOfyear).Length -eq 2){
+		$dayOfyear = "0" + $dayOfyear
+	}
+	
+	$config.major + "." + $config.minor + "." + $year + $dayOfyear + "." + $buildNumber	
 }
