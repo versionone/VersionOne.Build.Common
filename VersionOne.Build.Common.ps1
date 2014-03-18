@@ -1,6 +1,7 @@
 ﻿
 properties {
 	$config = Get-ConfigObject
+	$version = $config.major + "." + $config.minor + "." + (get-date -format "yyMM.HHmm")
 }
 
 #groups of tasks
@@ -113,8 +114,6 @@ function Get-NugetBinary (){
 
 
 function Update-AssemblyInfo(){
-	
-	$version = $config.major + "." + $config.minor + "." + (get-date -format "yyMM.HHmm")
 	$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
 	$versionAssembly = 'AssemblyVersion("' + $version + '")';
 	$versionFilePattern = 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
