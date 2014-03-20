@@ -1,46 +1,65 @@
 ﻿
 properties {
-	$config = Get-ConfigObject
+	$config = (Get-ConfigObjectFromFile '.\build.properties.json')
 	$version = Get-Version
 }
 
 #groups of tasks
 task default -depends local
-task local -depends restoreAndUpdatePackages,build,runUnitTests,runExtensions
-task jenkins -depends restoreAndUpdatePackages,build,runUnitTests,pushMyget,runExtensions
+task local -depends restorePackages,updatePackages,build,runTests,runExtensions
+task jenkins -depends restorePackages,updatePackages,build,runTests,pushPackages,runExtensions
 
 #tasks
 task validateInput {
 	#TODO: validate build.properties.json
 }
 
+task setAssemblyInfo{	
+	Update-AssemblyInfo
+}
+
 task build -depends clean,setAssemblyInfo {	
-	$solution = $config.solution
-	$configuration = $config.configuration
-	$platform = $config.platform
-	exec { msbuild $solution -t:Build -p:Configuration=$configuration "-p:Platform=$platform" }	
+	exec { iex (Get-BuildCommand) }	
 }
  
 task clean {	
-	$solution = $config.solution
-	$configuration = $config.configuration
-	$platform = $config.platform
-	exec { msbuild $solution -t:Clean -p:Configuration=$configuration "-p:Platform=$platform" }	
+	exec { iex (Get-CleanCommand) }	
 }
 
-task publish{
-	$project = $config.projectToPublish
-	$configuration = $config.configuration
-	exec { msbuild $project -t:Publish -p:Configuration=$configuration }	
+task publish{	
+	exec { iex (Get-PublishCommand) }	
 }
 
-task restoreAndUpdatePackages {
-	exec { .\\.nuget\nuget.exe restore  $config.solution -Source $config.nugetSources }	
-	exec { .\\.nuget\nuget.exe update  $config.solution -Source $config.nugetSources }	
+task restorePackages {
+	exec { iex (Get-RestorePackagesCommand) }	
 }
- 
-task setAssemblyInfo{	
-	Update-AssemblyInfo
+
+task updatePackages {
+	exec { iex (Get-UpdatePackagesCommand) }	
+}
+
+task generatePackage{
+	#TODO: make this able to generate multiple packages
+	exec { iex (Get-GeneratePackageCommand) }
+}
+
+task pushPackages -depends generatePackage{	
+	exec { iex (Get-PushPackagesCommand) }	
+}
+
+task installNunitRunners{
+	exec { iex (Get-InstallNRunnersCommand) }	
+}
+
+task runTests -depends installNunitRunners{
+	$testRunner = Get-NewestFilePath "nunit-console-x86.exe"	
+	
+	(ls -r *.Tests.dll) | 
+	where { $_.FullName -like "*\bin\Release\*.Tests.dll" } | 
+	foreach {
+		$fullName = $_.FullName
+		exec { iex "$testRunner $fullName" }
+	}
 }
 
 task setUpNuget {
@@ -48,43 +67,21 @@ task setUpNuget {
 	Get-NugetBinary
 }
 
-task generateNugetPackage{	
-	$project = $config.projectToPackage
-	$configuration = $config.configuration
-	exec { .\\.nuget\nuget.exe pack $project -Verbosity Detailed -Version $version -prop Configuration=$configuration }
-}
-
-task pushMyget -depends GenerateNugetPackage{	
-	exec { .\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL }	
-}
-
-task installNunitRunners{
-	exec { .\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages }
-}
-
-task runUnitTests -depends installNunitRunners{
-	$testRunner = Get-NewestFilePath "nunit-console-x86.exe"
-	$configuration = $config.configuration
-	
-	(ls -r *.Tests.dll) | where { $_.FullName -like "*\bin\Release\*.Tests.dll" } | foreach {
-		$fullName = $_.FullName
-		exec { iex "$testRunner $fullName" }
-	}
-}
-
 task runExtensions{
-	ls build-ex.*.ps1 | sort | foreach{		
+	ls build-ex.*.ps1 |
+	sort |
+	foreach{		
 		if ($_ -like "*.script.*") { 
 			Write-Host "The next extension has been loaded: $_ "  -ForegroundColor green
 			& $_
-		} 
+		}
 	}
 }
 
 #helpers
 
-function Get-ConfigObject(){
-	Get-Content .\build.properties.json -Raw | ConvertFrom-Json	
+function Get-ConfigObjectFromFile($file){
+	Get-Content $file -Raw | ConvertFrom-Json	
 }
 
 function Get-EnvironmentVariableOrDefault([string] $variable, [string]$default){		
@@ -112,6 +109,37 @@ function Get-NugetBinary (){
 	Invoke-WebRequest -Uri "http://nuget.org/nuget.exe" -OutFile $destination
 }
 
+function Get-BuildCommand(){
+	"msbuild $($config.solution) -t:Build -p:Configuration=$($config.configuration) `"-p:Platform=$($config.platform)`""
+}
+
+function Get-CleanCommand(){
+	"msbuild $($config.solution) -t:Clean -p:Configuration=$($config.configuration) `"-p:Platform=$($config.platform)`""
+}
+
+function Get-PublishCommand(){
+	"msbuild $($config.projectToPublish) -t:Publish -p:Configuration=$($config.configuration)"
+}
+
+function Get-RestorePackagesCommand(){
+	".\\.nuget\nuget.exe restore  $($config.solution) -Source $($config.nugetSources)"
+}
+
+function Get-UpdatePackagesCommand(){
+	".\\.nuget\nuget.exe update  $($config.solution) -Source $($config.nugetSources)"
+}
+
+function Get-GeneratePackageCommand (){
+	".\\.nuget\nuget.exe pack $($config.projectToPackage) -Verbosity Detailed -Version $version -prop Configuration=$($config.configuration)"
+}
+
+function Get-PushPackagesCommand() {	
+	".\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL"
+}
+
+function Get-InstallNRunnersCommand(){
+	".\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages"
+}
 
 function Update-AssemblyInfo(){
 	$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
@@ -151,7 +179,6 @@ function Update-Assemblies() {
 }
 
 function Get-Version(){	
-	#TODO: refactor all this
 	$year = (get-date).ToUniversalTime().ToString("yy")	
 	$hourMinute = (get-date).ToUniversalTime().ToString("HHmm")	
 	$buildNumber = Get-EnvironmentVariableOrDefault "BUILD_NUMBER" $hourMinute
@@ -164,5 +191,5 @@ function Get-Version(){
 		$dayOfyear = "0" + $dayOfyear
 	}
 	
-	$config.major + "." + $config.minor + "." + $year + $dayOfyear + "." + $buildNumber	
+	"$($config.major).$($config.minor).$year$dayOfyear.$buildNumber"
 }
