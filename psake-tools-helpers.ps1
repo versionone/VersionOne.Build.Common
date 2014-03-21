@@ -61,15 +61,23 @@ function Get-InstallNRunnersCommand(){
 }
 
 function Update-AssemblyInfo(){
+	param(
+        [Parameter(Mandatory=$false, Position=0, ValueFromPipeline=$true)]
+        [string]
+        $startingPath
+	)
+	
+	if (-not $startingPath) { $startingPath = (Get-Location).Path }
+	
 	$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
 	$versionAssembly = 'AssemblyVersion("' + $version + '")';
 	$versionFilePattern = 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
-	$versionAssemblyFile = 'AssemblyFileVersion("' + $version + '")';
+	$versionAssemblyFile = 'AssemblyFileVersion("' + $version + '")';	
 	
-	Get-ChildItem -r -filter AssemblyInfo.cs | 
+	Get-ChildItem -r -path $startingPath -filter AssemblyInfo.cs | 
 	Update-Assemblies	
 	
-	Get-ChildItem -r -filter AssemblyInfo.fs |
+	Get-ChildItem -r -path $startingPath -filter AssemblyInfo.fs |
 	Update-Assemblies
 }
 
@@ -82,7 +90,7 @@ function Update-Assemblies() {
 	process
 	{		
 		foreach ($file in $files)
-		{
+		{			
 			Write-Host Updating file $file.FullName
 			$tmp = ($file.FullName + ".tmp")
 			if (test-path ($tmp)) { remove-item $tmp }
