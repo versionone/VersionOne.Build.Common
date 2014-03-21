@@ -37,7 +37,7 @@ function Get-CleanCommand(){
 }
 
 function Get-PublishCommand(){
-	"msbuild $($config.projectToPublish) -t:Publish -p:Configuration=$($config.configuration)"
+	"msbuild $($config.projectToPublish) -t:Publish -p:Configuration=$($config.configuration) `"-p:Platform=Any CPU`""
 }
 
 function Get-RestorePackagesCommand(){
