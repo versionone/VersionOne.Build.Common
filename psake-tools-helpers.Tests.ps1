@@ -51,6 +51,17 @@ Describe "There are three files with different version" {
 	}
 }
 
+Describe "I am at the current folder location" {	
+	Mock Get-Location -MockWith { return @{ Path = "$TestDrive"; } }	
+	
+	Context "When calling New-NugetDirectory" {
+		New-NugetDirectory
+		 It "should create the nuget folder" {		 	
+		 	Test-Path "$TestDrive\.nuget" | Should Be $true
+		 }
+	}
+}
+
 Describe "The helper is initialized with the values from the configuration file" {
 	$config = Setup-Object
 	
