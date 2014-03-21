@@ -84,8 +84,27 @@ Describe "Update-AssemblyInfo" {
 		Update-AssemblyInfo $TestDrive
 		 It "should update the version values for the three files" {		 	
 			(Get-Content $TestDrive\$f1) | Should Be (Get-AssemblySampleWithNewVersion $version)
+			(Get-Content $TestDrive\$f2) | Should Be (Get-AssemblySampleWithNewVersion $version)
+			(Get-Content $TestDrive\$f3) | Should Be (Get-AssemblySampleWithNewVersion $version)
 		 }
 	}
+}
+
+Describe "Get-EnvironmentVariableOrDefault" {
+	Context "When calling it with a variable that doesn't exist" {
+		$result = Get-EnvironmentVariableOrDefault "ThereShoulNotBeAVariableWithThisName" "defaultValue"
+		 It "should return the default value " {		 	
+		 	 $result | Should be "defaultValue"
+		 }
+	}
+	
+	Context "When calling it with a variable that does exist" {
+		$result = Get-EnvironmentVariableOrDefault "Path" "defaultValue"		
+		 It "should not be the default value" {		 	
+		 	 $result | Should not be "defaultValue"
+		 }
+	}
+
 }
 
 Describe "Get-BuildCommand" {
