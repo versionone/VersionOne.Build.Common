@@ -53,7 +53,7 @@ task installNunitRunners{
 }
 
 task runTests -depends installNunitRunners{
-	$testRunner = Get-NewestFilePath "nunit-console-x86.exe"	
+	$testRunner = Get-NewestFilePath "packages" "nunit-console-x86.exe"	
 	
 	(ls -r *.Tests.dll) | 
 	where { $_.FullName -like "*\bin\Release\*.Tests.dll" } | 

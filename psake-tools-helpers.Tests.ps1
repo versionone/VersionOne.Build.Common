@@ -21,7 +21,6 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 ."$here\psake-tools-helpers.ps1"
 
 
-
 Describe "psake-tools-helpers hasn't been initialized" {
 	Context "When reading the configuration file with Get-ConfigObjectFromFile" {
 		$config = Setup-Object
@@ -33,6 +32,22 @@ Describe "psake-tools-helpers hasn't been initialized" {
 			$config.minor | Should Be "1"
 			$config.projectToPublish | Should Be "MyProject.csproj"
 		}
+	}
+}
+
+Describe "There are three files with different version" {
+	$folder = 'packages\Some.Library.Name'
+	$library = 'Some.Library.Name.dll'
+	
+	Setup -File "$folder.0.0.0.121\$library" ''
+	Setup -File "$folder.0.0.2.1\$library" ''
+  	Setup -File "$folder.3.0.0.50\$library" ''
+	
+	Context "When calling Get-NewestFilePath" {
+		$p = Get-NewestFilePath $TestDrive $library
+		 It "should get the newest one" {
+		 	$p | Should Be "$TestDrive\$folder.3.0.0.50\$library"	
+		 }
 	}
 }
 

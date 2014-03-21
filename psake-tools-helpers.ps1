@@ -14,8 +14,8 @@ function Get-EnvironmentVariableOrDefault([string] $variable, [string]$default){
 	}
 }
 
-function Get-NewestFilePath([string]$file){
-	$paths = @(Get-ChildItem -r -Path packages -filter $file | Sort-Object FullName  -descending)
+function Get-NewestFilePath([string]$startingPath,[string]$file){
+	$paths = @(Get-ChildItem -r -Path $startingPath -filter $file | Sort-Object FullName  -descending)
 	$paths[0].FullName
 }
 
