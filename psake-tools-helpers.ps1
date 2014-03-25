@@ -52,8 +52,8 @@ function Get-GeneratePackageCommand (){
 	".\\.nuget\nuget.exe pack $($config.projectToPackage) -Verbosity Detailed -Version $version -prop Configuration=$($config.configuration)"
 }
 
-function Get-PushPackagesCommand() {	
-	".\\.nuget\nuget.exe push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL"
+function Get-PushMygetCommand([string]$apiKey,[string]$repoUrl) {	
+	".\\.nuget\nuget.exe push *.nupkg $apiKey -Source $repoUrl"
 }
 
 function Get-InstallNRunnersCommand(){
@@ -91,7 +91,7 @@ function Update-Assemblies() {
 	{		
 		foreach ($file in $files)
 		{			
-			Write-Host Updating file $file.FullName
+			Write-Host Updating file $file.FullName -ForegroundColor green
 			$tmp = ($file.FullName + ".tmp")
 			if (test-path ($tmp)) { remove-item $tmp }
 			
@@ -105,12 +105,11 @@ function Update-Assemblies() {
 	}    
 }
 
-function Get-Version(){	
-	$year = (get-date).ToUniversalTime().ToString("yy")	
-	$hourMinute = (get-date).ToUniversalTime().ToString("HHmm")	
-	$buildNumber = Get-EnvironmentVariableOrDefault "BUILD_NUMBER" $hourMinute
+function Get-Version([DateTime]$currentUtcDate, [string]$buildNumber){	
+	$year = $currentUtcDate.ToString("yy")		
+	if( -not $buildNumber) { $buildNumber = $currentUtcDate.ToString("HHmm") }
 	
-	$dayOfyear = (get-date).DayOfYear
+	$dayOfyear = $currentUtcDate.DayOfYear
 	if(([string]$dayOfyear).Length -eq 1){
 		$dayOfyear=  "00" + $dayOfyear
 	}

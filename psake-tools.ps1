@@ -2,13 +2,14 @@
 
 properties {
 	$config = (Get-ConfigObjectFromFile '.\build.properties.json')
-	$version = Get-Version
+	$version = Get-Version ((get-date).ToUniversalTime()) (Get-EnvironmentVariableOrDefault "BUILD_NUMBER" $null)
+	$baseDirectory = (Get-Location).Path
 }
 
 #groups of tasks
 task default -depends local
 task local -depends restorePackages,updatePackages,build,runTests,runExtensions
-task jenkins -depends restorePackages,updatePackages,build,runTests,pushPackages,runExtensions
+task jenkins -depends restorePackages,updatePackages,build,runTests,pushMyGet,runExtensions
 
 #tasks
 task validateInput {
@@ -16,7 +17,7 @@ task validateInput {
 }
 
 task setAssemblyInfo{	
-	Update-AssemblyInfo
+	Update-AssemblyInfo $baseDirectory
 }
 
 task build -depends clean,setAssemblyInfo {	
@@ -44,8 +45,9 @@ task generatePackage{
 	exec { iex (Get-GeneratePackageCommand) }
 }
 
-task pushPackages -depends generatePackage{	
-	exec { iex (Get-PushPackagesCommand) }	
+task pushMyGet -depends generatePackage{
+	#TODO: should we check for the variables existence before?
+	exec { iex (Get-PushMygetCommand $env:MYGET_API_KEY $env:MYGET_REPO_URL) }	
 }
 
 task installNunitRunners{

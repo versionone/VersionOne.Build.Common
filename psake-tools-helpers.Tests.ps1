@@ -1,13 +1,16 @@
 ﻿function Get-ConfigSample(){
 	'{	
 		"solution": "MySolution.sln",
-		"projectToPublish": "MyProject.csproj",
+		"projectToPublish": "MyPublishProject.csproj",
+		"projectToPackage": "MyPackageProject.csproj",
 		"configuration": "Release",
     	"platform": "Any CPU",    
     	"major": "2",
-    	"minor": "1" 
+    	"minor": "1",
+		"nugetSources": "http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
 	}'
 }
+# careful with the ";" in nugetSources
 
 function Get-AssemblySample(){
 "[assembly: AssemblyVersion(`"0.0.123.456`")][assembly: AssemblyFileVersion(`"0.0.789.123`")][assembly: AssemblyCompany(`"Company, Inc.`")][assembly: AssemblyDescription(`"SomeAssembly`")]"
@@ -37,7 +40,8 @@ Describe "Get-ConfigObjectFromFile" {
 			$config.platform | Should Be "Any CPU"
 			$config.major | Should Be "2"
 			$config.minor | Should Be "1"
-			$config.projectToPublish | Should Be "MyProject.csproj"
+			$config.projectToPublish | Should Be "MyPublishProject.csproj"
+			$config.projectToPackage | Should Be "MyPackageProject.csproj"
 		}
 	}
 }
@@ -46,14 +50,17 @@ Describe "Get-NewestFilePath" {
 	$folder = 'packages\Some.Library.Name'
 	$library = 'Some.Library.Name.dll'
 	
-	Setup -File "$folder.0.0.0.121\$library" ''
-	Setup -File "$folder.0.0.2.1\$library" ''
-  	Setup -File "$folder.3.0.0.50\$library" ''
+	$libraries = `
+		"$folder.0.0.0.121\$library", `
+		"$folder.0.0.2.1\$library", `
+		"$folder.3.0.0.50\$library"
 	
-	Context "When calling it with the path that cointains those libraries" {
-		$p = Get-NewestFilePath $TestDrive $library
+	$libraries | foreach { Setup -File $_ } 
+	
+	Context "When calling it with a path that cointains those libraries" {
+		$path = Get-NewestFilePath $TestDrive $library
 		 It "should get the newest one" {
-		 	$p | Should Be "$TestDrive\$folder.3.0.0.50\$library"	
+		 	$path | Should Be "$TestDrive\$folder.3.0.0.50\$library"	
 		 }
 	}
 }
@@ -69,33 +76,67 @@ Describe "New-NugetDirectory" {
 	}
 }
 
-Describe "Update-AssemblyInfo" {	
-	$f1 = "a\AssemblyInfo.cs"
-	$f2 = "a\b.c\AssemblyInfo.cs"
-	$f3 = "a\b-c\d\AssemblyInfo.cs"
+Describe "Get-Version" {	
+	$config = Setup-Object
 	
-	Setup -File $f1 (Get-AssemblySample)
-	Setup -File $f2 (Get-AssemblySample)
-  	Setup -File $f3 (Get-AssemblySample)
+	Context "When calling it without the build number and a one digit day of year" {
+		$date = Get-Date -Year 2014 -Month 1 -Day 1 -Hour 1 -Minute 23
+		$result = Get-Version $date
+		It "should return" {		 	
+			$result | Should be "2.1.14001.0123"	
+		}
+	}
+	
+	Context "When calling it without the build number and a two digits day of year" {
+		$date = Get-Date -Year 2014 -Month 1 -Day 20 -Hour 1 -Minute 23
+		$result = Get-Version $date
+		It "should return" {		 	
+			$result | Should be "2.1.14020.0123"	
+		}
+	}
+	
+	Context "When calling it without the build number and a three digits day of year" {
+		$date = Get-Date -Year 2014 -Month 4 -Day 10 -Hour 1 -Minute 23
+		$result = Get-Version $date $null
+		It "should return" {		 	
+			$result | Should be "2.1.14100.0123"	
+		}
+	}
+	
+	Context "When calling it with the build number" {
+		$date = Get-Date -Year 2014 -Month 1 -Day 1 -Hour 1 -Minute 23
+		$result = Get-Version $date "2900"
+		 It "should return" {		 	
+		 	$result | Should be "2.1.14001.2900"
+		 }
+	}
+}
+
+Describe "Update-AssemblyInfo" {	
+	$files = `
+		"a\AssemblyInfo.cs",`
+		"a\b.c\AssemblyInfo.cs",`
+		"a\b-c\d\AssemblyInfo.cs"
+
+	$files | foreach { Setup -File $_ (Get-AssemblySample) }
 	
 	$version = "0.1.2.3"
 	
-	Context "When calling it in a path that cointains those files" {
+	Context "When calling it in a path that cointains three AssemblyInfo files" {
 		Update-AssemblyInfo $TestDrive
-		 It "should update the version values for the three files" {		 	
-			(Get-Content $TestDrive\$f1) | Should Be (Get-AssemblySampleWithNewVersion $version)
-			(Get-Content $TestDrive\$f2) | Should Be (Get-AssemblySampleWithNewVersion $version)
-			(Get-Content $TestDrive\$f3) | Should Be (Get-AssemblySampleWithNewVersion $version)
+		 It "should update the version values for the three files" {
+		 	$files | foreach { (Get-Content $TestDrive\$_) | Should Be (Get-AssemblySampleWithNewVersion $version) }
 		 }
 	}
 }
 
 Describe "Get-EnvironmentVariableOrDefault" {
+	
 	Context "When calling it with a variable that doesn't exist" {
 		$result = Get-EnvironmentVariableOrDefault "ThereShoulNotBeAVariableWithThisName" "defaultValue"
 		 It "should return the default value " {		 	
 		 	 $result | Should be "defaultValue"
-		 }
+		 }		 
 	}
 	
 	Context "When calling it with a variable that does exist" {
@@ -104,15 +145,15 @@ Describe "Get-EnvironmentVariableOrDefault" {
 		 	 $result | Should not be "defaultValue"
 		 }
 	}
-
 }
 
 Describe "Get-BuildCommand" {
 	$config = Setup-Object
 	
-	Context "When calling it" {		
+	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
-			Get-BuildCommand | Should Be "msbuild MySolution.sln -t:Build -p:Configuration=Release `"-p:Platform=Any CPU`""
+			Get-BuildCommand |
+			Should Be "msbuild MySolution.sln -t:Build -p:Configuration=Release `"-p:Platform=Any CPU`""
 		}
 	}
 }
@@ -120,9 +161,10 @@ Describe "Get-BuildCommand" {
 Describe "Get-CleanCommand" {
 	$config = Setup-Object
 	
-	Context "When calling it" {		
+	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
-			Get-CleanCommand | Should Be "msbuild MySolution.sln -t:Clean -p:Configuration=Release `"-p:Platform=Any CPU`""
+			Get-CleanCommand |
+			Should Be "msbuild MySolution.sln -t:Clean -p:Configuration=Release `"-p:Platform=Any CPU`""
 		}
 	}
 }
@@ -130,9 +172,64 @@ Describe "Get-CleanCommand" {
 Describe "Get-PublishCommand" {
 	$config = Setup-Object
 	
-	Context "When calling it" {		
+	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
-			Get-PublishCommand | Should Be "msbuild MyProject.csproj -t:Publish -p:Configuration=Release `"-p:Platform=Any CPU`""			
+			Get-PublishCommand |
+			Should Be "msbuild MyPublishProject.csproj -t:Publish -p:Configuration=Release `"-p:Platform=Any CPU`""			
+		}
+	}
+}
+
+Describe "Get-RestorePackagesCommand" {
+	$config = Setup-Object
+	
+	Context "When calling it with the configuration initialized" {
+		It "should return the msbuild command with the values from the configuration file" {		
+			Get-RestorePackagesCommand |
+			Should Be ".\\.nuget\nuget.exe restore MySolution.sln -Source http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
+		}
+	}
+}
+
+Describe "Get-UpdatePackagesCommand" {
+	$config = Setup-Object
+	
+	Context "When calling it with the configuration initialized" {
+		It "should return the msbuild command with the values from the configuration file" {		
+			Get-UpdatePackagesCommand |
+			Should Be ".\\.nuget\nuget.exe update MySolution.sln -Source http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
+		}
+	}
+}
+
+Describe "Get-GeneratePackageCommand" {
+	$config = Setup-Object
+	$version = "1.2.3.4"
+	Context "When calling it with the configuration initialized" {
+		It "should return the msbuild command with the values from the configuration file" {		
+			Get-GeneratePackageCommand | 
+			Should Be ".\\.nuget\nuget.exe pack MyPackageProject.csproj -Verbosity Detailed -Version 1.2.3.4 -prop Configuration=Release"			
+		}
+	}
+}
+
+Describe "Get-PushMyGetCommand" {
+	$apiKey = "someKey"
+	$repoUrl = "http://someUrl.org"
+	
+	Context "When calling it with the configuration initialized" {
+		It "should return the msbuild command with the values from the configuration file" {		
+			(Get-PushMyGetCommand $apiKey $repoUrl) | 
+			Should Be ".\\.nuget\nuget.exe push *.nupkg someKey -Source http://someUrl.org"
+		}
+	}
+}
+
+Describe "Get-InstallNRunnersCommand" {	
+	Context "When calling it" {
+		It "should return the msbuild command" {		
+			Get-InstallNRunnersCommand |
+			Should Be ".\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages"
 		}
 	}
 }
