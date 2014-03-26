@@ -42,6 +42,7 @@ Describe "Get-ConfigObjectFromFile" {
 			$config.minor | Should Be "1"
 			$config.projectToPublish | Should Be "MyPublishProject.csproj"
 			$config.projectToPackage | Should Be "MyPackageProject.csproj"
+			$config.nugetSources | Should Be "http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
 		}
 	}
 }
@@ -50,12 +51,12 @@ Describe "Get-NewestFilePath" {
 	$folder = 'packages\Some.Library.Name'
 	$library = 'Some.Library.Name.dll'
 	
-	$libraries = `
-		"$folder.0.0.0.121\$library", `
-		"$folder.0.0.2.1\$library", `
+	$libraries =
+		"$folder.0.0.0.121\$library",
+		"$folder.0.0.2.1\$library",
 		"$folder.3.0.0.50\$library"
 	
-	$libraries | foreach { Setup -File $_ } 
+	$libraries | % { Setup -File $_ } 
 	
 	Context "When calling it with a path that cointains those libraries" {
 		$path = Get-NewestFilePath $TestDrive $library
@@ -113,19 +114,21 @@ Describe "Get-Version" {
 }
 
 Describe "Update-AssemblyInfo" {	
-	$files = `
-		"a\AssemblyInfo.cs",`
-		"a\b.c\AssemblyInfo.cs",`
+	$files =
+		"a\AssemblyInfo.cs",
+		"a\b.c\AssemblyInfo.cs",
 		"a\b-c\d\AssemblyInfo.cs"
 
-	$files | foreach { Setup -File $_ (Get-AssemblySample) }
+	$files | % { Setup -File $_ (Get-AssemblySample) }
 	
 	$version = "0.1.2.3"
 	
 	Context "When calling it in a path that cointains three AssemblyInfo files" {
 		Update-AssemblyInfo $TestDrive
 		 It "should update the version values for the three files" {
-		 	$files | foreach { (Get-Content $TestDrive\$_) | Should Be (Get-AssemblySampleWithNewVersion $version) }
+		 	$files | 
+			% { (cat $TestDrive\$_) | 
+			Should Be (Get-AssemblySampleWithNewVersion $version) }
 		 }
 	}
 }
@@ -144,6 +147,34 @@ Describe "Get-EnvironmentVariableOrDefault" {
 		 It "should not be the default value" {		 	
 		 	 $result | Should not be "defaultValue"
 		 }
+	}
+}
+
+Describe "Get-Extensions" {
+	$files = 
+		"build-ex.001.script.zzz.ps1",
+		"build-ex.010.script.aaa.ps1",
+		"build-ex.100.script.mmm.ps1",
+		"build-ex.100.foo.script.ps1",
+		"build-ex.script.foo.mmm.ps1",
+		"build-ex.script.foo.mmm.ps11",
+		"build-ex.script.foo.mmm.ps",
+		"some-ex.001.script.zzz.ps1"
+		
+		
+	$files | % { Setup -File $_ '' }	
+	
+	Context "When calling it with a path that contains several files" {
+		$result = Get-Extensions $TestDrive
+		It "should only return files that match the pattern build-ex.*.script.*.ps1" {
+			$result.Length | Should Be 3			
+		}
+		
+		It "should return script paths in the proper order" {
+			$result[0].Name | Should Be "build-ex.001.script.zzz.ps1"
+			$result[1].Name | Should Be "build-ex.010.script.aaa.ps1"
+			$result[2].Name | Should Be "build-ex.100.script.mmm.ps1"
+		}
 	}
 }
 

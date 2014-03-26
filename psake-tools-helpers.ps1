@@ -1,6 +1,6 @@
 ﻿
 function Get-ConfigObjectFromFile($file){
-	Get-Content $file -Raw | ConvertFrom-Json	
+	cat $file -Raw | ConvertFrom-Json	
 }
 
 function Get-EnvironmentVariableOrDefault([string] $variable, [string]$default){		
@@ -15,17 +15,17 @@ function Get-EnvironmentVariableOrDefault([string] $variable, [string]$default){
 }
 
 function Get-NewestFilePath([string]$startingPath,[string]$file){
-	$paths = @(Get-ChildItem -r -Path $startingPath -filter $file | Sort-Object FullName  -descending)
+	$paths = @(ls -r -Path $startingPath -filter $file | sort FullName -descending)
 	$paths[0].FullName
 }
 
 function New-NugetDirectory(){
-	new-item (Get-Location).Path -name .nuget -type directory -force
+	New-Item (pwd).Path -name .nuget -type directory -force
 }
 
 function Get-NugetBinary (){		
-	$destination = (Get-Location).Path + '\.nuget\nuget.exe'	
-	Invoke-WebRequest -Uri "http://nuget.org/nuget.exe" -OutFile $destination
+	$destination = (pwd).Path + '\.nuget\nuget.exe'	
+	curl -Uri "http://nuget.org/nuget.exe" -OutFile $destination
 }
 
 function Get-BuildCommand(){
@@ -67,17 +67,17 @@ function Update-AssemblyInfo(){
         $startingPath
 	)
 	
-	if (-not $startingPath) { $startingPath = (Get-Location).Path }
+	if (-not $startingPath) { $startingPath = (pwd).Path }
 	
 	$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
 	$versionAssembly = 'AssemblyVersion("' + $version + '")';
 	$versionFilePattern = 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
 	$versionAssemblyFile = 'AssemblyFileVersion("' + $version + '")';	
 	
-	Get-ChildItem -r -path $startingPath -filter AssemblyInfo.cs | 
+	ls -r -path $startingPath -filter AssemblyInfo.cs | 
 	Update-Assemblies	
 	
-	Get-ChildItem -r -path $startingPath -filter AssemblyInfo.fs |
+	ls -r -path $startingPath -filter AssemblyInfo.fs |
 	Update-Assemblies
 }
 
@@ -95,10 +95,11 @@ function Update-Assemblies() {
 			$tmp = ($file.FullName + ".tmp")
 			if (test-path ($tmp)) { remove-item $tmp }
 			
-			(get-content $file.FullName) | 
+			(cat $file.FullName) |
 			% {$_ -replace $versionFilePattern, $versionAssemblyFile } | 
-			% {$_ -replace $versionPattern, $versionAssembly } > $tmp
-			
+			% {$_ -replace $versionPattern, $versionAssembly } `
+			> $tmp
+
 			if (test-path ($file.FullName)) { remove-item $file.FullName }
 			move-item $tmp $file.FullName -force			
 		}
@@ -118,4 +119,16 @@ function Get-Version([DateTime]$currentUtcDate, [string]$buildNumber){
 	}
 	
 	"$($config.major).$($config.minor).$year$dayOfyear.$buildNumber"
+}
+
+function Get-Extensions([string]$path)
+{
+	@(ls build-ex.*.script.*.ps1 -Path $path | sort FullName)
+}
+
+function Invoke-Extensions([object[]]$extensions) {
+	$extensions |% {
+		Write-Host "The next extension has been loaded: $_ "  -ForegroundColor green
+		& $_.FullName
+	}
 }

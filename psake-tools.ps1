@@ -3,7 +3,7 @@
 properties {
 	$config = (Get-ConfigObjectFromFile '.\build.properties.json')
 	$version = Get-Version ((get-date).ToUniversalTime()) (Get-EnvironmentVariableOrDefault "BUILD_NUMBER" $null)
-	$baseDirectory = (Get-Location).Path
+	$baseDirectory = (pwd).Path
 }
 
 #groups of tasks
@@ -58,7 +58,7 @@ task runTests -depends installNunitRunners{
 	$testRunner = Get-NewestFilePath "packages" "nunit-console-x86.exe"	
 	
 	(ls -r *.Tests.dll) | 
-	where { $_.FullName -like "*\bin\Release\*.Tests.dll" } | 
+	? { $_.FullName -like "*\bin\Release\*.Tests.dll" } | 
 	foreach {
 		$fullName = $_.FullName
 		exec { iex "$testRunner $fullName" }
@@ -71,12 +71,5 @@ task setUpNuget {
 }
 
 task runExtensions{
-	ls build-ex.*.ps1 |
-	sort |
-	foreach{		
-		if ($_ -like "*.script.*") { 
-			Write-Host "The next extension has been loaded: $_ "  -ForegroundColor green
-			& $_
-		}
-	}
+	Get-Extensions $baseDirectory | Invoke-Extensions
 }
