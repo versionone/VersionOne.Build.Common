@@ -13,7 +13,7 @@ task jenkins -depends restorePackages,updatePackages,build,runNunitTests,pushMyG
 
 #tasks
 task validateInput {
-	#TODO: validate build.properties.json
+	#TODO: validate build.properties.json for every task that uses it. It it fails show a file example
 }
 
 task setAssemblyInfo{	

@@ -1,4 +1,4 @@
-﻿function Get-ConfigSample(){
+﻿function Get-ConfigSample {
 	'{	
 		"solution": "MySolution.sln",
 		"projectToPublish": "MyPublishProject.csproj",
@@ -12,21 +12,22 @@
 }
 # careful with the ";" in nugetSources
 
-function Get-AssemblySample(){
+function Get-AssemblySample {
 "[assembly: AssemblyVersion(`"0.0.123.456`")]" +
 "[assembly: AssemblyFileVersion(`"0.0.789.123`")]" + 
 "[assembly: AssemblyCompany(`"Company, Inc.`")]" + 
 "[assembly: AssemblyDescription(`"SomeAssembly`")]"
 }
 
-function Get-AssemblySampleWithNewVersion($v){
+function Get-AssemblySampleWithNewVersion {
+param([string]$v)
 "[assembly: AssemblyVersion(`"$v`")]" +
 "[assembly: AssemblyFileVersion(`"$v`")]" +
 "[assembly: AssemblyCompany(`"Company, Inc.`")]" + 
 "[assembly: AssemblyDescription(`"SomeAssembly`")]"
 }
 
-function Setup-Object(){
+function Setup-Object {
 	Setup -File 'build.properties.json' (Get-ConfigSample)
 	Get-ConfigObjectFromFile "$TestDrive\build.properties.json"
 } 
@@ -76,6 +77,20 @@ Describe "New-NugetDirectory" {
 	Context "When calling it with a path parameter" {
 		New-NugetDirectory $TestDrive > $null
 		 It "should create the nuget folder in that location" {		 	
+		 	Test-Path "$TestDrive\.nuget" | Should be $true
+		 }
+	}
+}
+
+Describe "Get-NugetBinary" {
+	Context "When calling it with a path parameter" {
+		mock Invoke-WebRequest { Setup -File ("\.nuget\nuget.exe") } -Verifiable
+		Get-NugetBinary $TestDrive		
+		
+		It "should call Invoke-WebRequest" {
+			Assert-VerifiableMocks
+		}
+		It "should put the nuget binary in that location" {		 	
 		 	Test-Path "$TestDrive\.nuget" | Should be $true
 		 }
 	}

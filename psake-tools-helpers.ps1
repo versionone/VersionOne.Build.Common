@@ -30,7 +30,7 @@ function New-NugetDirectory {
 
 function Get-NugetBinary {
 	param([string]$path)
-	$destination = $path + '\.nuget\nuget.exe'	
+	$destination = $path + '\.nuget\nuget.exe'
 	curl -Uri "http://nuget.org/nuget.exe" -OutFile $destination
 }
 
@@ -69,7 +69,7 @@ function Get-InstallNRunnersCommand {
 
 function Update-AssemblyInfo {
 	param(
-        [Parameter(Mandatory=$false, Position=0, ValueFromPipeline=$true)]
+        [Parameter(ValueFromPipeline=$true)]
         [string]
         $startingPath
 	)
