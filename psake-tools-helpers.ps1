@@ -131,7 +131,7 @@ function Get-Version {
 
 function Get-Extensions {
 	param([string]$path)
-	@(ls build-ex.*.script.*.ps1 -Path $path | sort FullName)
+	,@(ls build-ex.*.script.*.ps1 -Path $path | sort FullName)
 }
 
 function Invoke-Extensions {
@@ -148,15 +148,14 @@ function Invoke-Extensions {
 	}
 }
 
+function Get-Tests {
+	param([string]$path)
+	,@(ls -r *.Tests.dll -Path $path | 
+	? { $_.FullName -like "*\bin\$($config.configuration)\*.Tests.dll" })
+}
+
 function Invoke-NunitTests {
 	param([string]$path)
 	$testRunner = Get-NewestFilePath $path "nunit-console-x86.exe"	
-	
-	(ls -r *.Tests.dll) | 
-	? { $_.FullName -like "*\bin\Release\*.Tests.dll" } | 
-	foreach {
-		$fullName = $_.FullName
-		iex "$testRunner $fullName"
-	}
-
+	Get-Tests $path | % { iex "$testRunner $($_.FullName)" }	
 }

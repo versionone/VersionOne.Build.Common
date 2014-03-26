@@ -213,6 +213,29 @@ Describe "Invoke-Extensions" {
 	}
 }
 
+Describe "Get-Tests" {
+	$config = Setup-Object
+	
+	$tests = 
+		"foo\bin\release\project.Tests.dll",
+		"foo\bin\debug\project.Tests.dll",
+		"foo\obj\release\project.Tests.dll",
+		"foo\obj\debug\project.Tests.dll",
+		"release\project.Tests.dll",
+		"project.Tests.dll",
+		".Tests.dll",
+		"Tests.dll"
+	
+	$tests | % { Setup -File $_ '' }
+	
+	Context "When calling it with a path that has test libraries" {		
+		It "should return the libraries that are at the proper folder for the current build configuration (debug, release)" {
+			 (Get-Tests $TestDrive).Length | Should Be 1
+		}
+	}
+}
+
+
 Describe "Get-BuildCommand" {
 	$config = Setup-Object
 	
