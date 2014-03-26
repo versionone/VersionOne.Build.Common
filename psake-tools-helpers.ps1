@@ -1,9 +1,9 @@
 ﻿
-function Get-ConfigObjectFromFile($file){
-	cat $file -Raw | ConvertFrom-Json	
+function Get-ConfigObjectFromFile([string]$fileName){
+	cat $fileName -Raw | ConvertFrom-Json	
 }
 
-function Get-EnvironmentVariableOrDefault([string] $variable, [string]$default){		
+function Get-EnvironmentVariableOrDefault([string]$variable, [string]$default){		
 	if([Environment]::GetEnvironmentVariable($variable))
 	{
 		[Environment]::GetEnvironmentVariable($variable)
@@ -138,4 +138,16 @@ function Invoke-Extensions() {
 			& $_.FullName
 		}
 	}
+}
+
+function Invoke-NunitTests([string]$path) {
+	$testRunner = Get-NewestFilePath $path "nunit-console-x86.exe"	
+	
+	(ls -r *.Tests.dll) | 
+	? { $_.FullName -like "*\bin\Release\*.Tests.dll" } | 
+	foreach {
+		$fullName = $_.FullName
+		iex "$testRunner $fullName"
+	}
+
 }

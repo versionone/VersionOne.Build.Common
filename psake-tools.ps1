@@ -8,8 +8,8 @@ properties {
 
 #groups of tasks
 task default -depends local
-task local -depends restorePackages,updatePackages,build,runTests,runExtensions
-task jenkins -depends restorePackages,updatePackages,build,runTests,pushMyGet,runExtensions
+task local -depends restorePackages,updatePackages,build,runNunitTests,runExtensions
+task jenkins -depends restorePackages,updatePackages,build,runNunitTests,pushMyGet,runExtensions
 
 #tasks
 task validateInput {
@@ -54,15 +54,8 @@ task installNunitRunners{
 	exec { iex (Get-InstallNRunnersCommand) }	
 }
 
-task runTests -depends installNunitRunners{
-	$testRunner = Get-NewestFilePath "packages" "nunit-console-x86.exe"	
-	
-	(ls -r *.Tests.dll) | 
-	? { $_.FullName -like "*\bin\Release\*.Tests.dll" } | 
-	foreach {
-		$fullName = $_.FullName
-		exec { iex "$testRunner $fullName" }
-	}
+task runNunitTests -depends installNunitRunners{
+	exec{ Invoke-NunitTests "$baseDirectory\packages" }
 }
 
 task setUpNuget {
