@@ -91,7 +91,7 @@ function Update-Assemblies() {
 	{		
 		foreach ($file in $files)
 		{			
-			Write-Host Updating file $file.FullName -ForegroundColor green
+			echo Updating file $file.FullName
 			$tmp = ($file.FullName + ".tmp")
 			if (test-path ($tmp)) { remove-item $tmp }
 			
@@ -126,9 +126,16 @@ function Get-Extensions([string]$path)
 	@(ls build-ex.*.script.*.ps1 -Path $path | sort FullName)
 }
 
-function Invoke-Extensions([object[]]$extensions) {
-	$extensions |% {
-		Write-Host "The next extension has been loaded: $_ "  -ForegroundColor green
-		& $_.FullName
+function Invoke-Extensions() {
+	param(
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
+        [object[]]
+        $extensions
+	)
+	process {
+		$extensions |% {
+			echo "The next extension has been loaded: $_ "
+			& $_.FullName
+		}
 	}
 }

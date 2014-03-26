@@ -70,7 +70,7 @@ Describe "New-NugetDirectory" {
 	Mock Get-Location -MockWith { return @{ Path = "$TestDrive"; } }	
 	
 	Context "When calling it" {
-		New-NugetDirectory
+		New-NugetDirectory > $null
 		 It "should create the nuget folder" {		 	
 		 	Test-Path "$TestDrive\.nuget" | Should be $true
 		 }
@@ -124,7 +124,7 @@ Describe "Update-AssemblyInfo" {
 	$version = "0.1.2.3"
 	
 	Context "When calling it in a path that cointains three AssemblyInfo files" {
-		Update-AssemblyInfo $TestDrive
+		Update-AssemblyInfo $TestDrive > $null
 		 It "should update the version values for the three files" {
 		 	$files | 
 			% { (cat $TestDrive\$_) | 
@@ -159,8 +159,7 @@ Describe "Get-Extensions" {
 		"build-ex.script.foo.mmm.ps1",
 		"build-ex.script.foo.mmm.ps11",
 		"build-ex.script.foo.mmm.ps",
-		"some-ex.001.script.zzz.ps1"
-		
+		"some-ex.001.script.zzz.ps1"		
 		
 	$files | % { Setup -File $_ '' }	
 	
@@ -174,6 +173,24 @@ Describe "Get-Extensions" {
 			$result[0].Name | Should Be "build-ex.001.script.zzz.ps1"
 			$result[1].Name | Should Be "build-ex.010.script.aaa.ps1"
 			$result[2].Name | Should Be "build-ex.100.script.mmm.ps1"
+		}
+	}
+}
+
+Describe "Invoke-Extensions" {	
+	$files = 
+		"build-ex.001.script.zzz.ps1",
+		"build-ex.010.script.aaa.ps1",
+		"build-ex.100.script.mmm.ps1"
+		
+	$files | % { Setup -File $_ "New-Item $TestDrive -name $_.copy -type file" }
+	(Get-Extensions $TestDrive) | Invoke-Extensions > $null
+	
+	Context "When calling it with a path that has three scripts present" {		
+		It "should run the three scripts" {
+			(Test-Path "$TestDrive\$($files[0].copy)") | Should Be $true
+			(Test-Path "$TestDrive\$($files[1].copy)") | Should Be $true
+			(Test-Path "$TestDrive\$($files[2].copy)") | Should Be $true
 		}
 	}
 }
