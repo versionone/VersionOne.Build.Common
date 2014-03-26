@@ -13,11 +13,17 @@
 # careful with the ";" in nugetSources
 
 function Get-AssemblySample(){
-"[assembly: AssemblyVersion(`"0.0.123.456`")][assembly: AssemblyFileVersion(`"0.0.789.123`")][assembly: AssemblyCompany(`"Company, Inc.`")][assembly: AssemblyDescription(`"SomeAssembly`")]"
+"[assembly: AssemblyVersion(`"0.0.123.456`")]" +
+"[assembly: AssemblyFileVersion(`"0.0.789.123`")]" + 
+"[assembly: AssemblyCompany(`"Company, Inc.`")]" + 
+"[assembly: AssemblyDescription(`"SomeAssembly`")]"
 }
 
 function Get-AssemblySampleWithNewVersion($v){
-"[assembly: AssemblyVersion(`"$v`")][assembly: AssemblyFileVersion(`"$v`")][assembly: AssemblyCompany(`"Company, Inc.`")][assembly: AssemblyDescription(`"SomeAssembly`")]"
+"[assembly: AssemblyVersion(`"$v`")]" +
+"[assembly: AssemblyFileVersion(`"$v`")]" +
+"[assembly: AssemblyCompany(`"Company, Inc.`")]" + 
+"[assembly: AssemblyDescription(`"SomeAssembly`")]"
 }
 
 function Setup-Object(){
@@ -66,12 +72,10 @@ Describe "Get-NewestFilePath" {
 	}
 }
 
-Describe "New-NugetDirectory" {	
-	Mock Get-Location -MockWith { return @{ Path = "$TestDrive"; } }	
-	
-	Context "When calling it" {
-		New-NugetDirectory > $null
-		 It "should create the nuget folder" {		 	
+Describe "New-NugetDirectory" {
+	Context "When calling it with a path parameter" {
+		New-NugetDirectory $TestDrive > $null
+		 It "should create the nuget folder in that location" {		 	
 		 	Test-Path "$TestDrive\.nuget" | Should be $true
 		 }
 	}
@@ -119,7 +123,7 @@ Describe "Update-AssemblyInfo" {
 		"a\b.c\AssemblyInfo.cs",
 		"a\b-c\d\AssemblyInfo.cs"
 
-	$files | % { Setup -File $_ (Get-AssemblySample) }
+	$files | % { Setup -File $_ (Get-AssemblySample) }	
 	
 	$version = "0.1.2.3"
 	
@@ -182,15 +186,14 @@ Describe "Invoke-Extensions" {
 		"build-ex.001.script.zzz.ps1",
 		"build-ex.010.script.aaa.ps1",
 		"build-ex.100.script.mmm.ps1"
-		
-	$files | % { Setup -File $_ "New-Item $TestDrive -name $_.copy -type file" }
+	
+	0,1,2 | % { Setup -File $files[$_] "New-Item $TestDrive -name $_.tmp -type file" }
+	
 	(Get-Extensions $TestDrive) | Invoke-Extensions > $null
 	
 	Context "When calling it with a path that has three scripts present" {		
-		It "should run the three scripts" {
-			(Test-Path "$TestDrive\$($files[0].copy)") | Should Be $true
-			(Test-Path "$TestDrive\$($files[1].copy)") | Should Be $true
-			(Test-Path "$TestDrive\$($files[2].copy)") | Should Be $true
+		It "should run the three scripts that create a temporal file each one" {
+			0,1,2 | % { Test-Path "$TestDrive\$_.tmp" | Should Be $true }			
 		}
 	}
 }

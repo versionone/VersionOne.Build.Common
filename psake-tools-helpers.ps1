@@ -1,9 +1,11 @@
 ﻿
-function Get-ConfigObjectFromFile([string]$fileName){
+function Get-ConfigObjectFromFile {
+	param([string]$fileName)
 	cat $fileName -Raw | ConvertFrom-Json	
 }
 
-function Get-EnvironmentVariableOrDefault([string]$variable, [string]$default){		
+function Get-EnvironmentVariableOrDefault {
+	param([string]$variable, [string]$default)
 	if([Environment]::GetEnvironmentVariable($variable))
 	{
 		[Environment]::GetEnvironmentVariable($variable)
@@ -14,53 +16,58 @@ function Get-EnvironmentVariableOrDefault([string]$variable, [string]$default){
 	}
 }
 
-function Get-NewestFilePath([string]$startingPath,[string]$file){
+function Get-NewestFilePath {
+	param([string]$startingPath,[string]$file)
+	
 	$paths = @(ls -r -Path $startingPath -filter $file | sort FullName -descending)
 	$paths[0].FullName
 }
 
-function New-NugetDirectory(){
-	New-Item (pwd).Path -name .nuget -type directory -force
+function New-NugetDirectory {
+	param([string]$path)
+	New-Item $path -name .nuget -type directory -force
 }
 
-function Get-NugetBinary (){		
-	$destination = (pwd).Path + '\.nuget\nuget.exe'	
+function Get-NugetBinary {
+	param([string]$path)
+	$destination = $path + '\.nuget\nuget.exe'	
 	curl -Uri "http://nuget.org/nuget.exe" -OutFile $destination
 }
 
-function Get-BuildCommand(){
+function Get-BuildCommand {
 	"msbuild $($config.solution) -t:Build -p:Configuration=$($config.configuration) `"-p:Platform=$($config.platform)`""
 }
 
-function Get-CleanCommand(){
+function Get-CleanCommand {
 	"msbuild $($config.solution) -t:Clean -p:Configuration=$($config.configuration) `"-p:Platform=$($config.platform)`""
 }
 
-function Get-PublishCommand(){
+function Get-PublishCommand {
 	"msbuild $($config.projectToPublish) -t:Publish -p:Configuration=$($config.configuration) `"-p:Platform=Any CPU`""
 }
 
-function Get-RestorePackagesCommand(){
+function Get-RestorePackagesCommand {
 	".\\.nuget\nuget.exe restore $($config.solution) -Source $($config.nugetSources)"
 }
 
-function Get-UpdatePackagesCommand(){
+function Get-UpdatePackagesCommand {
 	".\\.nuget\nuget.exe update $($config.solution) -Source $($config.nugetSources)"
 }
 
-function Get-GeneratePackageCommand (){
+function Get-GeneratePackageCommand {
 	".\\.nuget\nuget.exe pack $($config.projectToPackage) -Verbosity Detailed -Version $version -prop Configuration=$($config.configuration)"
 }
 
-function Get-PushMygetCommand([string]$apiKey,[string]$repoUrl) {	
+function Get-PushMygetCommand {
+	param([string]$apiKey,[string]$repoUrl)
 	".\\.nuget\nuget.exe push *.nupkg $apiKey -Source $repoUrl"
 }
 
-function Get-InstallNRunnersCommand(){
+function Get-InstallNRunnersCommand {
 	".\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages"
 }
 
-function Update-AssemblyInfo(){
+function Update-AssemblyInfo {
 	param(
         [Parameter(Mandatory=$false, Position=0, ValueFromPipeline=$true)]
         [string]
@@ -81,9 +88,9 @@ function Update-AssemblyInfo(){
 	Update-Assemblies
 }
 
-function Update-Assemblies() {
+function Update-Assemblies {
 	param(
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [object[]]
         $files
 	)	
@@ -106,7 +113,8 @@ function Update-Assemblies() {
 	}    
 }
 
-function Get-Version([DateTime]$currentUtcDate, [string]$buildNumber){	
+function Get-Version {
+	param([DateTime]$currentUtcDate, [string]$buildNumber)
 	$year = $currentUtcDate.ToString("yy")		
 	if( -not $buildNumber) { $buildNumber = $currentUtcDate.ToString("HHmm") }
 	
@@ -121,12 +129,12 @@ function Get-Version([DateTime]$currentUtcDate, [string]$buildNumber){
 	"$($config.major).$($config.minor).$year$dayOfyear.$buildNumber"
 }
 
-function Get-Extensions([string]$path)
-{
+function Get-Extensions {
+	param([string]$path)
 	@(ls build-ex.*.script.*.ps1 -Path $path | sort FullName)
 }
 
-function Invoke-Extensions() {
+function Invoke-Extensions {
 	param(
         [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
         [object[]]
@@ -140,7 +148,8 @@ function Invoke-Extensions() {
 	}
 }
 
-function Invoke-NunitTests([string]$path) {
+function Invoke-NunitTests {
+	param([string]$path)
 	$testRunner = Get-NewestFilePath $path "nunit-console-x86.exe"	
 	
 	(ls -r *.Tests.dll) | 

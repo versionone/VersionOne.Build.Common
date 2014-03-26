@@ -59,8 +59,8 @@ task runNunitTests -depends installNunitRunners{
 }
 
 task setUpNuget {
-	New-NugetDirectory
-	Get-NugetBinary
+	New-NugetDirectory $baseDirectory
+	Get-NugetBinary $baseDirectory
 }
 
 task runExtensions{
