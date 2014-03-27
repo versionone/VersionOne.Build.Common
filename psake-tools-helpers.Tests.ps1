@@ -10,7 +10,6 @@
 		"nugetSources": "http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
 	}'
 }
-# careful with the ";" in nugetSources
 
 function Get-AssemblySample {
 "[assembly: AssemblyVersion(`"0.0.123.456`")]" +
@@ -42,14 +41,14 @@ Describe "Get-ConfigObjectFromFile" {
 	Context "When reading the configuration file" {
 		$config = Setup-Object
 		It "should return an object with the proper values" {
-			$config.solution | Should Be "MySolution.sln"
-			$config.configuration | Should Be "Release"
-			$config.platform | Should Be "Any CPU"
-			$config.major | Should Be "2"
-			$config.minor | Should Be "1"
-			$config.projectToPublish | Should Be "MyPublishProject.csproj"
-			$config.projectToPackage | Should Be "MyPackageProject.csproj"
-			$config.nugetSources | Should Be "http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
+			$config.solution | Should Be 'MySolution.sln'
+			$config.configuration | Should Be 'Release'
+			$config.platform | Should Be  'Any CPU'
+			$config.major | Should Be '2'
+			$config.minor | Should Be '1'
+			$config.projectToPublish | Should Be 'MyPublishProject.csproj'
+			$config.projectToPackage | Should Be 'MyPackageProject.csproj'
+			$config.nugetSources | Should Be 'http://packages.nuget.org/api/v2/`;http://packages.otherSource.org'
 		}
 	}
 }
@@ -251,7 +250,7 @@ Describe "Get-BuildCommand" {
 	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
 			Get-BuildCommand |
-			Should Be "msbuild MySolution.sln -t:Build -p:Configuration=Release `"-p:Platform=Any CPU`""
+			Should Be 'msbuild MySolution.sln -t:Build -p:Configuration=Release "-p:Platform=Any CPU"'
 		}
 	}
 }
@@ -262,7 +261,7 @@ Describe "Get-CleanCommand" {
 	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
 			Get-CleanCommand |
-			Should Be "msbuild MySolution.sln -t:Clean -p:Configuration=Release `"-p:Platform=Any CPU`""
+			Should Be 'msbuild MySolution.sln -t:Clean -p:Configuration=Release "-p:Platform=Any CPU"'
 		}
 	}
 }
@@ -273,7 +272,7 @@ Describe "Get-PublishCommand" {
 	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
 			Get-PublishCommand |
-			Should Be "msbuild MyPublishProject.csproj -t:Publish -p:Configuration=Release `"-p:Platform=Any CPU`""			
+			Should Be 'msbuild MyPublishProject.csproj -t:Publish -p:Configuration=Release "-p:Platform=Any CPU"'
 		}
 	}
 }
@@ -284,7 +283,7 @@ Describe "Get-RestorePackagesCommand" {
 	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
 			Get-RestorePackagesCommand |
-			Should Be ".\\.nuget\nuget.exe restore MySolution.sln -Source http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
+			Should Be '.\\.nuget\nuget.exe restore MySolution.sln -Source http://packages.nuget.org/api/v2/`;http://packages.otherSource.org'
 		}
 	}
 }
@@ -295,7 +294,7 @@ Describe "Get-UpdatePackagesCommand" {
 	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
 			Get-UpdatePackagesCommand |
-			Should Be ".\\.nuget\nuget.exe update MySolution.sln -Source http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
+			Should Be '.\\.nuget\nuget.exe update MySolution.sln -Source http://packages.nuget.org/api/v2/`;http://packages.otherSource.org'
 		}
 	}
 }
@@ -306,7 +305,7 @@ Describe "Get-GeneratePackageCommand" {
 	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
 			Get-GeneratePackageCommand | 
-			Should Be ".\\.nuget\nuget.exe pack MyPackageProject.csproj -Verbosity Detailed -Version 1.2.3.4 -prop Configuration=Release"			
+			Should Be '.\\.nuget\nuget.exe pack MyPackageProject.csproj -Verbosity Detailed -Version 1.2.3.4 -prop Configuration=Release'
 		}
 	}
 }
@@ -318,7 +317,7 @@ Describe "Get-PushMyGetCommand" {
 	Context "When calling it with the configuration initialized" {
 		It "should return the msbuild command with the values from the configuration file" {		
 			(Get-PushMyGetCommand $apiKey $repoUrl) | 
-			Should Be ".\\.nuget\nuget.exe push *.nupkg someKey -Source http://someUrl.org"
+			Should Be '.\\.nuget\nuget.exe push *.nupkg someKey -Source http://someUrl.org'
 		}
 	}
 }
@@ -327,7 +326,7 @@ Describe "Get-InstallNRunnersCommand" {
 	Context "When calling it" {
 		It "should return the msbuild command" {		
 			Get-InstallNRunnersCommand |
-			Should Be ".\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages"
+			Should Be '.\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages'
 		}
 	}
 }

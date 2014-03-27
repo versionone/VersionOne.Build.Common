@@ -1,8 +1,26 @@
 ﻿
+function Clean-Characters {
+	param(
+		[Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+		[object]$obj
+	)	
+		$obj.psobject.properties |
+		? {$_.Value.Contains(';') } |
+		% {	$_.Value = ($_.Value -replace ';', '`;') }
+		
+		$obj
+}
+
+
 function Get-ConfigObjectFromFile {
 	param([string]$fileName)
-	cat $fileName -Raw | ConvertFrom-Json	
+	
+	cat $fileName -Raw | 
+	ConvertFrom-Json |	
+	Clean-Characters
 }
+
+
 
 function Get-EnvironmentVariableOrDefault {
 	param([string]$variable, [string]$default)
