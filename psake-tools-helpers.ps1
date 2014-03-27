@@ -140,7 +140,9 @@ function Invoke-Extensions {
         [object[]]
         $extensions
 	)
+	
 	process {
+		if(-not $extensions) { return }
 		$extensions |% {
 			echo "The next extension has been loaded: $_ "
 			& $_.FullName
