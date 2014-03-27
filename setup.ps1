@@ -19,9 +19,11 @@ function DownloadAndImportModules(){
 	.nuget\nuget.exe install psake-tools -Source http://www.myget.org/F/versionone/api/v2/ -OutputDirectory  packages -NoCache
 }
 
-function CopyCommonToRoot(){
-	$commonPath = GetModulePath "psake-tools.ps1"
-	Copy-Item -Path $commonPath -Destination (Get-Location).Path -Force
+function CopyPsakeToolsToRoot(){
+	$toolsPath = GetModulePath "psake-tools.ps1"
+	Copy-Item -Path $toolsPath -Destination (Get-Location).Path -Force
+	$helpersPath = GetModulePath "psake-tools-helpers.ps1"
+	Copy-Item -Path $helpersPath -Destination (Get-Location).Path -Force
 }
 
 function ImportPsake(){
@@ -33,7 +35,7 @@ try{
 	DownloadNuget
 	DownloadAndImportModules
 	ImportPsake
-	CopyCommonToRoot	
+	CopyPsakeToolsToRoot	
 	Invoke-psake psake-tools.ps1 ($tasks.Split(',').Trim())	
 }
 Catch {

@@ -204,12 +204,21 @@ Describe "Invoke-Extensions" {
 	
 	0,1,2 | % { Setup -File $files[$_] "New-Item $TestDrive -name $_.tmp -type file" }
 	
-	(Get-Extensions $TestDrive) | Invoke-Extensions > $null
-	
-	Context "When calling it with a path that has three scripts present" {		
+	Context "When calling it with a path that has three scripts present" {
+		(Get-Extensions $TestDrive) | Invoke-Extensions > $null
 		It "should run the three scripts that create a temporal file each one" {
 			0,1,2 | % { Test-Path "$TestDrive\$_.tmp" | Should Be $true }			
 		}
+	}
+	
+	Context "When calling it with an empty array" {
+		@() | Invoke-Extensions > $null
+		It "shouldn't throw an exception" { }
+	}
+	
+	Context "When calling it with null" {
+		$null | Invoke-Extensions > $null
+		It "shouldn't throw an exception" { }
 	}
 }
 

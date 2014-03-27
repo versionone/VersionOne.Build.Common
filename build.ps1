@@ -3,6 +3,7 @@
 	$version = "1.0.0."
 	$destDir = "build"
 	Copy-Item  psake-tools.ps1 $destDir
+	Copy-Item  psake-tools-helpers.ps1 $destDir
 
 	.nuget\nuget.exe pack  "$destDir\psake-tools.nuspec" -Verbosity Detailed -Version $version$env:BUILD_NUMBER
 	.nuget\nuget.exe  push *.nupkg $env:MYGET_API_KEY -Source $env:MYGET_REPO_URL

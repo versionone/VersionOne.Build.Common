@@ -136,7 +136,7 @@ function Get-Extensions {
 
 function Invoke-Extensions {
 	param(
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
+        [Parameter(Mandatory=$false, Position=0, ValueFromPipeline=$true)]
         [object[]]
         $extensions
 	)
@@ -156,6 +156,6 @@ function Get-Tests {
 
 function Invoke-NunitTests {
 	param([string]$path)
-	$testRunner = Get-NewestFilePath $path "nunit-console-x86.exe"	
+	$testRunner = Get-NewestFilePath "$path\packages" "nunit-console-x86.exe"	
 	Get-Tests $path | % { iex "$testRunner $($_.FullName)" }	
 }

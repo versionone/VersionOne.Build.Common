@@ -55,7 +55,7 @@ task installNunitRunners{
 }
 
 task runNunitTests -depends installNunitRunners{
-	exec{ Invoke-NunitTests "$baseDirectory\packages" }
+	exec{ Invoke-NunitTests $baseDirectory }
 }
 
 task setUpNuget {
