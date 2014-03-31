@@ -85,25 +85,12 @@ function Get-InstallNRunnersCommand {
 	".\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages"
 }
 
-function Update-AssemblyInfo {
-	param(
-        [Parameter(ValueFromPipeline=$true)]
-        [string]
-        $startingPath
-	)
-	
+function Get-Assemblies {
+	param([string]$startingPath)	
 	if (-not $startingPath) { $startingPath = (pwd).Path }
 	
-	$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
-	$versionAssembly = 'AssemblyVersion("' + $version + '")';
-	$versionFilePattern = 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
-	$versionAssemblyFile = 'AssemblyFileVersion("' + $version + '")';	
-	
-	ls -r -path $startingPath -filter AssemblyInfo.cs | 
-	Update-Assemblies	
-	
-	ls -r -path $startingPath -filter AssemblyInfo.fs |
-	Update-Assemblies
+	@(ls -r -path $startingPath -filter AssemblyInfo.cs) + 
+	@(ls -r -path $startingPath -filter AssemblyInfo.fs)
 }
 
 function Update-Assemblies {
@@ -111,7 +98,15 @@ function Update-Assemblies {
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [object[]]
         $files
-	)	
+	)
+	
+	begin {
+		$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
+		$versionAssembly = 'AssemblyVersion("' + $version + '")';
+		$versionFilePattern = 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
+		$versionAssemblyFile = 'AssemblyFileVersion("' + $version + '")'
+	}
+	
 	process
 	{		
 		foreach ($file in $files)

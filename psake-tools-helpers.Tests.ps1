@@ -131,19 +131,37 @@ Describe "Get-Version" {
 	}
 }
 
-Describe "Update-AssemblyInfo" {
-	Context "when calling it with a path that cointains three AssemblyInfo files" {
+Describe "Get-Assemblies" {
+	Context "when calling it with a path that contains four AssemblyInfo files on different directories" {
+		"a\AssemblyInfo.cs",
+		"a\b.c\AssemblyInfo.cs",
+		"a\b-c\d\AssemblyInfo.cs",
+		"a\b-c\d\efg\AssemblyInfo.fs" | 
+		% { Setup -File $_ (Get-AssemblySample) }
+		
+		$assemblies = Get-Assemblies $TestDrive
+		
+		It "should get all those files" {
+			$assemblies.Length | Should Be 4 
+		 }
+	}
+}
+
+Describe "Update-Assemblies" {
+	Context "when calling with the path of four AssemblyInfo files" {
 		$version = "0.1.2.3"
 		$files =
 			"a\AssemblyInfo.cs",
 			"a\b.c\AssemblyInfo.cs",
-			"a\b-c\d\AssemblyInfo.cs"
+			"a\b-c\d\AssemblyInfo.cs",
+			"a\b-c\d\efg\AssemblyInfo.fs"
 
 		$files | % { Setup -File $_ (Get-AssemblySample) }
-		Update-AssemblyInfo $TestDrive > $null
 		
-		It "should update the version values for the three files" {
-			$files | 
+		Get-Assemblies $TestDrive | Update-Assemblies > $null
+		
+		It "should update the version values for those files" {
+			$files |
 			% { (cat $TestDrive\$_) | 
 			Should Be (Get-AssemblySampleWithNewVersion $version) }
 		 }

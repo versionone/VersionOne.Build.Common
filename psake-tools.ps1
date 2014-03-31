@@ -16,8 +16,8 @@ task validateInput {
 	#TODO: validate build.properties.json for every task that uses it. It it fails show a file example
 }
 
-task setAssemblyInfo{	
-	Update-AssemblyInfo $baseDirectory
+task setAssemblyInfo{
+	Get-Assemblies $baseDirectory | Update-Assemblies	
 }
 
 task build -depends clean,setAssemblyInfo {	
