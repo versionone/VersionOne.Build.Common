@@ -1,6 +1,10 @@
-# VersionOne Jenkins Job requirements for properly using psake-tools:
+# VersionOne Requirements for Using psake-tools
 
 This document describes requirements for using psake-tools to build VersionOne .NET projects. Note: it may not be applicable to other projects outside of VersionOne, but we're collaborating on the doc here during the iteration.
+
+# Jenkins Job Conifuguration setup
+
+When configuring a Jenkins job, apply these settings:
 
 ## Job Notifications
 * Check `Restrict where this project can be run`
