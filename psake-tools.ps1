@@ -8,8 +8,8 @@ properties {
 
 #groups of tasks
 task default -depends local
-task local -depends restorePackages,updatePackages,build,runNunitTests,runExtensions
-task jenkins -depends restorePackages,updatePackages,build,runNunitTests,pushMyGet,runExtensions
+task local -depends runPreExtensions,restorePackages,updatePackages,build,runNunitTests,runPostExtensions
+task jenkins -depends runPreExtensions,restorePackages,updatePackages,build,runNunitTests,pushMyGet,runPostExtensions
 
 #tasks
 task validateInput {
@@ -63,6 +63,10 @@ task setUpNuget {
 	Get-NugetBinary $baseDirectory
 }
 
-task runExtensions{
-	Get-Extensions $baseDirectory | Invoke-Extensions
+task runPreExtensions{
+	Get-PreExtensions $baseDirectory | Invoke-Extensions
+}
+
+task runPostExtensions{
+	Get-PostExtensions $baseDirectory | Invoke-Extensions
 }

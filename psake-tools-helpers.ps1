@@ -15,7 +15,7 @@ function Clean-Characters {
 function Get-ConfigObjectFromFile {
 	param([string]$fileName)
 	
-	cat $fileName -Raw | 
+	gc $fileName -Raw | 
 	ConvertFrom-Json |	
 	Clean-Characters
 }
@@ -95,9 +95,8 @@ function Get-Assemblies {
 
 function Update-Assemblies {
 	param(
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
-        [object[]]
-        $files
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]        
+        $file
 	)
 	
 	begin {
@@ -108,21 +107,18 @@ function Update-Assemblies {
 	}
 	
 	process
-	{		
-		foreach ($file in $files)
-		{			
-			echo Updating file $file.FullName
-			$tmp = ($file.FullName + ".tmp")
-			if (test-path ($tmp)) { remove-item $tmp }
+	{
+        echo Updating file $file.FullName
+		$tmp = ($file.FullName + ".tmp")
+		if (test-path ($tmp)) { remove-item $tmp }
 			
-			(cat $file.FullName) |
-			% {$_ -replace $versionFilePattern, $versionAssemblyFile } | 
-			% {$_ -replace $versionPattern, $versionAssembly } `
-			> $tmp
+		(gc $file.FullName) |
+		% {$_ -replace $versionFilePattern, $versionAssemblyFile } | 
+		% {$_ -replace $versionPattern, $versionAssembly } `
+		> $tmp
 
-			if (test-path ($file.FullName)) { remove-item $file.FullName }
-			move-item $tmp $file.FullName -force			
-		}
+		if (test-path ($file.FullName)) { remove-item $file.FullName }
+		move-item $tmp $file.FullName -force			
 	}    
 }
 
@@ -142,24 +138,27 @@ function Get-Version {
 	"$($config.major).$($config.minor).$year$dayOfyear.$buildNumber"
 }
 
-function Get-Extensions {
+function Get-PreExtensions {
 	param([string]$path)
-	,@(ls build-ex.*.script.*.ps1 -Path $path | sort FullName)
+    ,@(gci *.ps1 -Path $path | 
+	? { $_.FullName -match "pre.[0-9]{3}\..*?\.ps1" }  | 
+    sort FullName)
+}
+
+function Get-PostExtensions {
+	param([string]$path)
+	,@(gci *.ps1 -Path $path | 
+	? { $_.FullName -match "post.[0-9]{3}\..*?\.ps1" }  | 
+    sort FullName)
 }
 
 function Invoke-Extensions {
-	param(
-        [Parameter(Mandatory=$false, Position=0, ValueFromPipeline=$true)]
-        [object[]]
-        $extensions
-	)
+	param([Parameter(Mandatory=$false,ValueFromPipeline=$true)]$extension)
 	
 	process {
-		if(-not $extensions) { return }
-		$extensions |% {
-			echo "The next extension has been loaded: $_ "
-			& $_.FullName
-		}
+		if(-not $extension) { return }
+        echo "The next extension has been loaded: $($extension.Name)"
+		& ($extension.FullName)
 	}
 }
 

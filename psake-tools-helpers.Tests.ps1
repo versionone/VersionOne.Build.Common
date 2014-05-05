@@ -132,11 +132,14 @@ Describe "Get-Version" {
 }
 
 Describe "Get-Assemblies" {
-	Context "when calling it with a path that contains four AssemblyInfo files on different directories" {
+	Context "when calling it with a path that contains
+        four AssemblyInfo files on different directories" {
 		"a\AssemblyInfo.cs",
 		"a\b.c\AssemblyInfo.cs",
 		"a\b-c\d\AssemblyInfo.cs",
-		"a\b-c\d\efg\AssemblyInfo.fs" | 
+		"a\b-c\d\efg\AssemblyInfo.fs",
+        "a\b-c\d\efg\AssemblyInfo.zs",
+        "AssemblyInfo" | 
 		% { Setup -File $_ (Get-AssemblySample) }
 		
 		$assemblies = Get-Assemblies $TestDrive
@@ -185,9 +188,39 @@ Describe "Get-EnvironmentVariableOrDefault" {
 	}
 }
 
-Describe "Get-Extensions" {
+Describe "Get-PreExtensions" {
 	Context "when calling it with a path that contains several files" {
 		$files =
+		"pre.001.zzz.ps1",
+		"pre.010.aaa.ps1",
+		"pre.100.mmm.ps1",
+		"pre.101.foo.script.ps1",
+		"pre.script.foo.mmm.ps1",		
+		"some-ex.001.script.zzz.ps1"
+		
+	    $files | % { Setup -File $_ '' }
+		
+        $result = Get-PreExtensions $TestDrive        
+		It "should only return files that match the pattern pre.number.*.ps1" {
+			$result.Length | Should Be 4			
+		}
+		
+		It "should return scripts paths in the proper order" {
+			$result[0].Name | Should Be "pre.001.zzz.ps1"
+			$result[1].Name | Should Be "pre.010.aaa.ps1"
+			$result[2].Name | Should Be "pre.100.mmm.ps1"
+            $result[3].Name | Should Be "pre.101.foo.script.ps1"            
+		}
+	}
+}
+
+Describe "Get-PostExtensions" {
+	Context "when calling it with a path that contains several files" {
+		$files =
+        "post.001.zzz.ps1",
+		"post.010.aaa.ps1",
+		"post.100.mmm.ps1",
+		"post.101.foo.script.ps1",
 		"build-ex.001.script.zzz.ps1",
 		"build-ex.010.script.aaa.ps1",
 		"build-ex.100.script.mmm.ps1",
@@ -198,15 +231,16 @@ Describe "Get-Extensions" {
 		"some-ex.001.script.zzz.ps1"		
 		
 	$files | % { Setup -File $_ '' }
-		$result = Get-Extensions $TestDrive
-		It "should only return files that match the pattern build-ex.*.script.*.ps1" {
-			$result.Length | Should Be 3			
+		$result = Get-PostExtensions $TestDrive
+		It "should only return files that match the pattern post.number.*.ps1" {
+			$result.Length | Should Be 4			
 		}
 		
 		It "should return scripts paths in the proper order" {
-			$result[0].Name | Should Be "build-ex.001.script.zzz.ps1"
-			$result[1].Name | Should Be "build-ex.010.script.aaa.ps1"
-			$result[2].Name | Should Be "build-ex.100.script.mmm.ps1"
+			$result[0].Name | Should Be "post.001.zzz.ps1"
+			$result[1].Name | Should Be "post.010.aaa.ps1"
+			$result[2].Name | Should Be "post.100.mmm.ps1"
+            $result[3].Name | Should Be "post.101.foo.script.ps1"
 		}
 	}
 }
@@ -214,12 +248,12 @@ Describe "Get-Extensions" {
 Describe "Invoke-Extensions" {
 	Context "when calling it with three extensions" {
 		$files = 
-		"build-ex.001.script.zzz.ps1",
-		"build-ex.010.script.aaa.ps1",
-		"build-ex.100.script.mmm.ps1"
+		"pre.001.script.zzz.ps1",
+		"pre.010.script.aaa.ps1",
+		"pre.100.script.mmm.ps1"
 	
 		0,1,2 | % { Setup -File $files[$_] "New-Item $TestDrive -name $_.tmp -type file" }
-		(Get-Extensions $TestDrive) | Invoke-Extensions > $null
+		(Get-PreExtensions $TestDrive) | Invoke-Extensions > $null
 		
 		It "should run the three scripts that create a temporal file each one" {
 			0,1,2 | % { Test-Path "$TestDrive\$_.tmp" | Should Be $true }			
