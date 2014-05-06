@@ -59,8 +59,10 @@ build, clean, setAssemblyInfo, publish, restorePackages, updatePackages, generat
 ##Extensions
 Predefined tasks aren't enough for you? Don't worry, just create your script file with the next name format:
 
-build-ex.**OrderNumber**.script.**nameOfYourScript**.ps1
+pre.**OrderNumber**.**NameOfYourScript**.ps1
+or
+post.**OrderNumber**.**NameOfYourScript**.ps1
 
-Example: `build-ex.001.script.DeployToAWS.ps1`
+Example: `post.001.DeployToAWS.ps1`
 
-This script will be run at the very end as an extra task. If you have more than one, use the OrderNumber to decide the order in which they are run.
+The pre scripts are run at the very beginning, before any other task. Post scripts will be run at the end as an extra task. If you have more than one, use the OrderNumber to decide the order in which they are executed.
