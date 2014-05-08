@@ -8,15 +8,15 @@ properties {
 
 #groups of tasks
 task default -depends local
-task local -depends runPreExtensions,restorePackages,updatePackages,build,runNunitTests,runPostExtensions
-task jenkins -depends runPreExtensions,restorePackages,updatePackages,build,runNunitTests,pushMyGet,runPostExtensions
+task local -depends restoreAndUpdatePackages,build,runNunitTests
+task jenkins -depends runPreExtensions,restoreAndUpdatePackages,build,runNunitTests,pushMyGet,runPostExtensions
 
 #tasks
 task validateInput {
 	#TODO: validate build.properties.json for every task that uses it. If it fails show a file example
 }
 
-task setAssemblyInfo{
+task setAssemblyInfo {
 	Get-Assemblies $baseDirectory | Update-Assemblies	
 }
 
@@ -28,8 +28,11 @@ task clean {
 	exec { iex (Get-CleanCommand) }	
 }
 
-task publish{	
+task publish {	
 	exec { iex (Get-PublishCommand) }	
+}
+
+task restoreAndUpdatePackages -depends restorePackages,updatePackages {
 }
 
 task restorePackages {
@@ -40,21 +43,21 @@ task updatePackages {
 	exec { iex (Get-UpdatePackagesCommand) }	
 }
 
-task generatePackage{
+task generatePackage {
 	#TODO: make this able to generate multiple packages
 	exec { iex (Get-GeneratePackageCommand) }
 }
 
-task pushMyGet -depends generatePackage{
+task pushMyGet -depends generatePackage {
 	#TODO: should we check for the variables existence before?
 	exec { iex (Get-PushMygetCommand $env:MYGET_API_KEY $env:MYGET_REPO_URL) }	
 }
 
-task installNunitRunners{
+task installNunitRunners {
 	exec { iex (Get-InstallNRunnersCommand) }	
 }
 
-task runNunitTests -depends installNunitRunners{
+task runNunitTests -depends installNunitRunners {
 	exec{ Invoke-NunitTests $baseDirectory }
 }
 
@@ -63,10 +66,14 @@ task setUpNuget {
 	Get-NugetBinary $baseDirectory
 }
 
-task runPreExtensions{
+task runPreExtensions {
 	Get-PreExtensions $baseDirectory | Invoke-Extensions
 }
 
-task runPostExtensions{
+task runPostExtensions {
 	Get-PostExtensions $baseDirectory | Invoke-Extensions
+}
+
+task publishDocumentation {
+    exec { Publish-Documentation }
 }

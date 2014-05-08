@@ -173,3 +173,21 @@ function Invoke-NunitTests {
 	$testRunner = Get-NewestFilePath "$path\packages" "nunit-console-x86.exe"	
 	Get-Tests $path | % { iex "$testRunner $($_.FullName)" }	
 }
+
+function Publish-Documentation {
+	# ----- Prepare Branches ------------------------------------------------------
+	git checkout -f gh-pages
+	git checkout master
+
+	# ----- Publish Documentation -------------------------------------------------
+	## Publishes a subdirectory "doc" of the main project to the gh-pages branch.
+	## From: http://happygiraffe.net/blog/2009/07/04/publishing-a-subdirectory-to-github-pages/
+	$docHash = ((git ls-tree -d HEAD doc) -split "\s+")[2]
+	$newCommit = (Write-Host "Auto-update docs." | git commit-tree $docHash -p refs/heads/gh-pages)
+	git update-ref refs/heads/gh-pages $newCommit
+
+
+	# ----- Push Docs -------------------------------------------------------------
+	## Push changes.
+	git push origin gh-pages
+}
