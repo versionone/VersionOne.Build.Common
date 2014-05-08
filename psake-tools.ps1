@@ -77,3 +77,7 @@ task runPostExtensions {
 task publishDocumentation {
     exec { Publish-Documentation }
 }
+
+task publishToAppCatalog {
+    exec { Publish-Catalog }
+}

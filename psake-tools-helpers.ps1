@@ -191,3 +191,115 @@ function Publish-Documentation {
 	## Push changes.
 	git push origin gh-pages
 }
+
+function Get-PublishCatalogConfig {
+    param([string]$fileName)
+    
+	if (Test-Path $fileName) {
+		Get-Content $fileName -Raw | ConvertFrom-Json
+	}
+}
+
+function Publish-Catalog {
+    param([string]$productFile='product.json')
+    
+	$staging = @{}
+	$staging = Get-PublishCatalogConfig('staging.json')
+	
+    if ($staging.Count -eq 0) {
+		$staging.url = $Env:staging_url;
+		$staging.username = $Env:staging_username;
+		$staging.password = $Env:staging_password;
+	}
+	
+	if (-not (Test-Path $productFile)) {
+		"File $productFile does not exist. Upload aborted."
+	}	
+	
+    $response = Invoke-WebRequest `
+	    -Uri $staging.url `
+	    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($staging.username+":"+$staging.password ))} `
+	    -Method Put `
+	    -InFile $productFile `
+	    -ContentType 'application/json'
+        
+    if ($response.StatusCode -ne "200") {
+        throw $response.Content					
+    }
+}
+
+function Promote-Catalog {
+    param([string]$productId)
+    
+	$staging = @{}
+	$staging = Get-PublishCatalogConfig('staging.json')
+    
+	if ($staging.Count -eq 0) {
+		$staging.url = $Env:staging_url;
+	}
+
+	$production = @{}
+	$production = Get-PublishCatalogConfig('production.json')
+	if ($production.Count -eq 0) {
+		$production.url = $Env:production_url;
+		$production.username = $Env:production_username;
+		$production.password = $Env:production_password;
+	}
+    
+	$parameters = @{'id'= $productId}
+	
+	$stagingResponse = Invoke-WebRequest `
+	    -Uri $staging.url `
+	    -Method Get `
+	    -Body $parameters
+	
+	Write-Debug "staging: $($stagingResponse.StatusCode) - $($stagingResponse.StatusDescription)"
+	
+	$productionResponse = Invoke-WebRequest `
+	    -Uri $production.url `
+	    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($production.username+":"+$production.password ))} `
+	    -Method Put `
+	    -Body $stagingResponse.Content `
+	    -ContentType 'application/json'
+	
+	Write-Debug "production: $($productionResponse.StatusCode) - $($productionResponse.StatusDescription)"
+	
+	$productionResponse
+}
+
+function Push-GitCatalog {	
+	$staging = @{}
+	$staging = Get-PublishCatalogConfig('staging.json')
+	if ($staging.Count -eq 0) {
+		$staging.url = $Env:staging_url;
+		$staging.username = $Env:staging_username;
+		$staging.password = $Env:staging_password;
+	}
+	
+	$git_files =  git show --name-only --pretty="format:"
+	
+	foreach($git_file in $git_files){
+		if($git_file -ne "") {
+			if ((Test-Path $git_file) -and ($git_file.EndsWith(".json",1))) {
+				Write-Debug "Processing: $git_file"
+
+				$stagingResponse = Invoke-WebRequest `
+				    -Uri $staging.url `
+				    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($staging.username+":"+$staging.password ))} `
+				    -Method Put `
+				    -InFile $git_file `
+				    -ContentType 'application/json'				
+				
+				Write-Debug " > $($stagingResponse.StatusCode) - $($stagingResponse.StatusDescription)"
+
+				if ($stagingResponse.StatusCode -ne "200")
+				{
+                    throw $stagingResponse.Content					
+				}
+			}
+			else{
+				Write-Debug "Nothing to do."
+			}
+		}
+	}	
+}
