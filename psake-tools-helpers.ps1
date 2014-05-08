@@ -226,6 +226,8 @@ function Publish-Catalog {
     if ($response.StatusCode -ne "200") {
         throw $response.Content					
     }
+    
+    Write-Host $response.Content
 }
 
 function Promote-Catalog {
@@ -294,8 +296,10 @@ function Push-GitCatalog {
 
 				if ($stagingResponse.StatusCode -ne "200")
 				{
-                    throw $stagingResponse.Content					
+                    throw $stagingResponse.Content
 				}
+                
+                Write-Host $stagingResponse.Content
 			}
 			else{
 				Write-Debug "Nothing to do."
