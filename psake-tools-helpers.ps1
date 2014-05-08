@@ -203,10 +203,10 @@ function Get-PublishCatalogConfig {
 function Publish-Catalog {
     param([string]$productFile='product.json')
     
-	$staging = @{}
-	$staging = Get-PublishCatalogConfig('staging.json')
+	$staging = Get-PublishCatalogConfig 'staging.json'
 	
-    if ($staging.Count -eq 0) {
+    if ($staging -eq $null) {
+        $staging = @{}
 		$staging.url = $Env:staging_url;
 		$staging.username = $Env:staging_username;
 		$staging.password = $Env:staging_password;
@@ -229,18 +229,18 @@ function Publish-Catalog {
 }
 
 function Promote-Catalog {
-    param([string]$productId)
+    param([string]$productId)   
+	
+	$staging = Get-PublishCatalogConfig 'staging.json'
     
-	$staging = @{}
-	$staging = Get-PublishCatalogConfig('staging.json')
-    
-	if ($staging.Count -eq 0) {
+	if ($staging -eq $null) {
+        $staging = @{}
 		$staging.url = $Env:staging_url;
 	}
-
-	$production = @{}
-	$production = Get-PublishCatalogConfig('production.json')
-	if ($production.Count -eq 0) {
+	
+	$production = Get-PublishCatalogConfig 'production.json'
+	if ($production -eq $null) {
+        $production = @{}
 		$production.url = $Env:production_url;
 		$production.username = $Env:production_username;
 		$production.password = $Env:production_password;
@@ -267,10 +267,10 @@ function Promote-Catalog {
 	$productionResponse
 }
 
-function Push-GitCatalog {	
-	$staging = @{}
-	$staging = Get-PublishCatalogConfig('staging.json')
-	if ($staging.Count -eq 0) {
+function Push-GitCatalog {
+	$staging = Get-PublishCatalogConfig 'staging.json'
+	if ($staging -eq $null) {
+        $staging = @{}
 		$staging.url = $Env:staging_url;
 		$staging.username = $Env:staging_username;
 		$staging.password = $Env:staging_password;
