@@ -2,7 +2,7 @@
 	'{	
 		"solution": "MySolution.sln",
 		"projectToPublish": "MyPublishProject.csproj",
-		"projectToPackage": "MyPackageProject.csproj",
+		"projectToPackage": "MyPackageProject.csproj,MyPackageProject2.csproj",
 		"configuration": "Release",
     	"platform": "Any CPU",    
     	"major": "2",
@@ -47,7 +47,7 @@ Describe "Get-ConfigObjectFromFile" {
 			$config.major | Should Be '2'
 			$config.minor | Should Be '1'
 			$config.projectToPublish | Should Be 'MyPublishProject.csproj'
-			$config.projectToPackage | Should Be 'MyPackageProject.csproj'
+			$config.projectToPackage | Should Be 'MyPackageProject.csproj,MyPackageProject2.csproj'
 			$config.nugetSources | Should Be 'http://packages.nuget.org/api/v2/`;http://packages.otherSource.org'
 		}
 	}
@@ -342,11 +342,11 @@ Describe "Get-UpdatePackagesCommand" {
 }
 
 Describe "Get-GeneratePackageCommand" {	
-	Context "when calling it with the configuration initialized" {
+	Context "when calling it with the project to package" {
 		$config = Setup-Object
 		$version = "1.2.3.4"
 		It "should return the expected command with the values from the configuration file" {		
-			Get-GeneratePackageCommand | 
+			Get-GeneratePackageCommand "MyPackageProject.csproj" | 
 			Should Be '.\\.nuget\nuget.exe pack MyPackageProject.csproj -Verbosity Detailed -Version 1.2.3.4 -prop Configuration=Release'
 		}
 	}

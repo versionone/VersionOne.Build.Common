@@ -43,9 +43,10 @@ task updatePackages {
 	exec { iex (Get-UpdatePackagesCommand) }	
 }
 
-task generatePackage {
-	#TODO: make this able to generate multiple packages
-	exec { iex (Get-GeneratePackageCommand) }
+task generatePackage {	
+    Get-ProjectsToPackage | % {
+        iex (Get-GeneratePackageCommand $_)
+    }
 }
 
 task pushMyGet -depends generatePackage {

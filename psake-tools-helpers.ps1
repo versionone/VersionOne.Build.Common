@@ -73,7 +73,8 @@ function Get-UpdatePackagesCommand {
 }
 
 function Get-GeneratePackageCommand {
-	".\\.nuget\nuget.exe pack $($config.projectToPackage) -Verbosity Detailed -Version $version -prop Configuration=$($config.configuration)"
+    param([string]$project)
+	".\\.nuget\nuget.exe pack $project -Verbosity Detailed -Version $version -prop Configuration=$($config.configuration)"
 }
 
 function Get-PushMygetCommand {
@@ -85,8 +86,12 @@ function Get-InstallNRunnersCommand {
 	".\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages"
 }
 
+function Get-ProjectsToPackage {
+    ($config.projectToPackage).Split(",")    
+}
+
 function Get-Assemblies {
-	param([string]$startingPath)	
+	param([string]$startingPath)
 	if (-not $startingPath) { $startingPath = (pwd).Path }
 	
 	@(ls -r -path $startingPath -filter AssemblyInfo.cs) + 
