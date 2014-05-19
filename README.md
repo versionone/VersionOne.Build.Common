@@ -53,7 +53,7 @@ There are two major sets of tasks that you can use as parameter, local and jenki
 
 ###The complete list of tasks:
 
-build, clean, setAssemblyInfo, publish, restorePackages, updatePackages, generatePackage, pushMyGet, installNunitRunners, runNunitTests, setUpNuget, runExtensions.
+build, clean, setAssemblyInfo, publish, restorePackages, updatePackages, generatePackage, pushMyGet, installNunitRunners, runNunitTests, setUpNuget, runPreExtensions, runPostExtensions, publishDocumentation, publishToAppCatalog, zipFiles.
 
 
 ##Extensions
