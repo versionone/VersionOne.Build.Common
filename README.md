@@ -45,7 +45,7 @@ By running build.ps1 you are all set for a basic local build.
 
 ##Tasks parameters
 If you only want to run some of the tasks, you can specify them by passing their names as parameters in the next way:
-``.\build.ps1 "restorePackages,updatePackages,build"``
+``.\build.ps1 "restoreAndUpdatePackages,build"``
 keep in mind that some tasks have dependencies. For example; if you call build it will also call clean and setAssemblyInfo.
 
 ##Predefined tasks
@@ -53,7 +53,7 @@ There are two major sets of tasks that you can use as parameter, local and jenki
 
 ###The complete list of tasks:
 
-build, clean, setAssemblyInfo, publish, restorePackages, updatePackages, generatePackage, pushMyGet, installNunitRunners, runNunitTests, setUpNuget, runPreExtensions, runPostExtensions, publishDocumentation, publishToAppCatalog, zipFiles.
+build, clean, setAssemblyInfo, publish, restoreAndUpdatePackages, generatePackage, pushMyGet, installNunitRunners, runNunitTests, setUpNuget, runPreExtensions, runPostExtensions, publishDocumentation, publishToAppCatalog, zipFiles.
 
 
 ##Extensions
