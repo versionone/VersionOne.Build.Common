@@ -316,7 +316,7 @@ Describe "Get-PublishCommand" {
 		$config = Setup-Object
 		It "should return the msbuild command with the values from the configuration file" {		
 			Get-PublishCommand |
-			Should Be 'msbuild MyPublishProject.csproj -t:Publish -p:Configuration=Release "-p:Platform=Any CPU"'
+			Should Be 'msbuild MyPublishProject.csproj -t:Publish -p:Configuration=Release "-p:Platform=AnyCPU"'
 		}
 	}
 }
