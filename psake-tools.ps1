@@ -165,8 +165,8 @@ task publishToAppCatalog {
 
 }
 
-task publishToAppCatalogFromGitShow {
-    exec { Push-GitCatalog }
+task publishCatalogFromGitShow {
+    exec { Publish-CatalogFromGitShow }
 }
 
 task zipFiles {

@@ -282,7 +282,7 @@ function Promote-Catalog {
 	$productionResponse
 }
 
-function Push-GitCatalog {
+function Publish-CatalogFromGitShow {
 	$staging = Get-PublishCatalogConfig 'staging.json'
 	if ($staging -eq $null) {
         $staging = @{}
