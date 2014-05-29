@@ -1,5 +1,4 @@
-��.".\psake-tools-helpers.ps1"
-
+.".\psake-tools-helpers.ps1"
 
 
 properties {
