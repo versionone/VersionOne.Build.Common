@@ -1,4 +1,4 @@
-
+﻿
 function Clean-Characters {
 	param(
 		[Parameter(Mandatory=$true, ValueFromPipeline=$true)]
