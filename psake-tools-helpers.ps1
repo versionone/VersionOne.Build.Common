@@ -229,12 +229,28 @@ function Publish-Catalog {
 		"File $productFile does not exist. Upload aborted."
 	}	
 	
-    $response = Invoke-WebRequest `
-	    -Uri $staging.url `
-	    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($staging.username+":"+$staging.password ))} `
-	    -Method Put `
-	    -InFile $productFile `
-	    -ContentType 'application/json'
+    try{
+	    $response = Invoke-WebRequest `
+		    -Uri $staging.url `
+		    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($staging.username+":"+$staging.password ))} `
+		    -Method Put `
+		    -InFile $productFile `
+		    -ContentType 'application/json'
+	}
+	catch {
+	    if($_.Exception.Response -ne $null){
+	        $stream = $_.Exception.Response.GetResponseStream()
+	        [void]$stream.Seek(0, [System.IO.SeekOrigin]::Begin)
+	        $reader = New-Object System.IO.StreamReader $stream
+	        $response = $reader.ReadToEnd()
+	        $reader.close()
+	        $stream.close()
+	        throw $_.Exception.Message + "`nFile $productFile failed with response: " + $response
+	    }
+	    else{
+	        throw $_.Exception
+	    }
+	}
         
     if ($response.StatusCode -ne "200") {
         throw $response.Content					
@@ -297,20 +313,32 @@ function Publish-CatalogFromGitShow {
 		if($git_file -ne "") {
 			if ((Test-Path $git_file) -and ($git_file.EndsWith(".json",1))) {
 				Write-Debug "Processing: $git_file"
-
-				$stagingResponse = Invoke-WebRequest `
-				    -Uri $staging.url `
-				    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($staging.username+":"+$staging.password ))} `
-				    -Method Put `
-				    -InFile $git_file `
-				    -ContentType 'application/json'				
-				
-				Write-Debug " > $($stagingResponse.StatusCode) - $($stagingResponse.StatusDescription)"
-
-				if ($stagingResponse.StatusCode -ne "200")
-				{
-                    throw $stagingResponse.Content
+				try{
+					$stagingResponse = Invoke-WebRequest `
+					    -Uri $staging.url `
+					    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($staging.username+":"+$staging.password ))} `
+					    -Method Put `
+					    -InFile $git_file `
+					    -ContentType 'application/json'				
+					
+					Write-Debug " > $($stagingResponse.StatusCode) - $($stagingResponse.StatusDescription)"
 				}
+				catch {
+				    if($_.Exception.Response -ne $null){
+				        $stream = $_.Exception.Response.GetResponseStream()
+				        [void]$stream.Seek(0, [System.IO.SeekOrigin]::Begin)
+				        $reader = New-Object System.IO.StreamReader $stream
+				        $response = $reader.ReadToEnd()
+				        $reader.close()
+				        $stream.close()
+				        throw $_.Exception.Message + "`nFile $git_file failed with response: " + $response
+				    }
+				    else{
+				        throw $_.Exception
+				    }
+				}
+
+
                 
                 Write-Host $stagingResponse.Content
 			}
