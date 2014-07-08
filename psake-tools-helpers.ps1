@@ -82,6 +82,11 @@ function Get-PushMygetCommand {
 	".\\.nuget\nuget.exe push *.nupkg $apiKey -Source $repoUrl"
 }
 
+function Get-PushNugetCommand {
+	param([string]$apiKey)
+	".\\.nuget\nuget.exe push *.nupkg $apiKey"
+}
+
 function Get-InstallNRunnersCommand {
 	".\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages"
 }

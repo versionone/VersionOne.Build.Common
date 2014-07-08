@@ -363,6 +363,16 @@ Describe "Get-PushMyGetCommand" {
 	}
 }
 
+Describe "Get-PushNuGetCommand" {
+	Context "when calling it with the api key" {
+		$apiKey = "someKey"
+		It "should return the expected command" {
+			(Get-PushNuGetCommand $apiKey) | 
+			Should Be '.\\.nuget\nuget.exe push *.nupkg someKey'
+		}
+	}
+}
+
 Describe "Get-InstallNRunnersCommand" {	
 	Context "when calling it" {
 		It "should return the expected command" {
