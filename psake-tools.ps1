@@ -107,7 +107,13 @@ task pushMyGet -depends generatePackage {
 
 }
 
+task pushNuGet -depends generatePackage {
 
+#TODO: should we check for the variables existence before?
+
+exec { iex (Get-PushNugetCommand $env:NUGET_API_KEY) }	
+
+}
 
 task installNunitRunners {
 
