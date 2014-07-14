@@ -108,7 +108,6 @@ task pushMyGet -depends generatePackage {
 }
 
 
-
 task installNunitRunners {
 
 	exec { iex (Get-InstallNRunnersCommand) }	
@@ -116,10 +115,23 @@ task installNunitRunners {
 }
 
 
-
 task runNunitTests -depends installNunitRunners {
 
 	exec{ Invoke-NunitTests $baseDirectory }
+
+}
+
+
+task installNSpecRunners {
+
+    exec { iex (Get-InstallNSpecCommand) }   
+
+}
+
+
+task runNspecTests -depends installNSpecRunners {
+
+    exec{ Invoke-NspecTests $baseDirectory }
 
 }
 

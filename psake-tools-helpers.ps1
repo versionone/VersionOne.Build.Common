@@ -91,6 +91,10 @@ function Get-InstallNRunnersCommand {
 	".\\.nuget\nuget.exe install NUnit.Runners -OutputDirectory packages"
 }
 
+function Get-InstallNSpecCommand {
+	".\\.nuget\nuget.exe install nspec -OutputDirectory packages"
+}
+
 function Get-ProjectsToPackage {
     ($config.projectToPackage).Split(",")    
 }
@@ -184,11 +188,24 @@ function Get-Tests {
 
 function Invoke-NunitTests {
 	param([string]$path)
-	$testRunner = Get-NewestFilePath "$path\packages" "nunit-console-x86.exe"
-	if ((Get-Tests $path).Length -ne 0) {
-		Get-Tests $path | % { iex "$testRunner $($_.FullName)" }	
+	$target = Get-Tests $path
+	$bin = Get-NewestFilePath "$path\packages" "nunit-console-x86.exe"
+	Invoke-TestsRunner $bin $target
+}
+
+function Invoke-NspecTests {
+	param([string]$path)
+	$target = Get-Tests $path
+	$bin = Get-NewestFilePath "$path\packages" "NSpecRunner.exe"
+	Invoke-TestsRunner $bin $target
+}
+
+function Invoke-TestsRunner {
+	param($bin,$target)
+	if ($target.Length -ne 0) {
+		$target | % { iex "$bin $($_.FullName)" }
 	} else {
-		Write-Host "There are no test to run"
+		Write-Host "There are no targets specified to run."
 	}
 }
 

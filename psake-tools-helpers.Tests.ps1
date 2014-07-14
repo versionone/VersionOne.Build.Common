@@ -381,3 +381,12 @@ Describe "Get-InstallNRunnersCommand" {
 		}
 	}
 }
+
+Describe "Get-InstallNSpecCommand" {	
+	Context "when calling it" {
+		It "should return the expected command" {
+			Get-InstallNSpecCommand |
+			Should Be '.\\.nuget\nuget.exe install nspec -OutputDirectory packages'
+		}
+	}
+}
