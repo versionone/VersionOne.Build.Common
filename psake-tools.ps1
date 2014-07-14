@@ -98,13 +98,20 @@ task generatePackage {
 }
 
 
-
 task pushMyGet -depends generatePackage {
 
 	#TODO: should we check for the variables existence before?
 
 	exec { iex (Get-PushMygetCommand $env:MYGET_API_KEY $env:MYGET_REPO_URL) }	
 
+}
+
+
+task pushNuGet -depends generatePackage {
+
+    #TODO: should we check for the variables existence before?
+
+    exec { iex (Get-PushNugetCommand $env:NUGET_API_KEY) }
 }
 
 
