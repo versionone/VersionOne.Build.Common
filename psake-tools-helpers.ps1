@@ -202,8 +202,9 @@ function Invoke-NspecTests {
 
 function Invoke-TestsRunner {
 	param($bin,$target)
+    
 	if ($target.Length -ne 0) {
-		$target | % { iex "$bin $($_.FullName)" }
+		$target | % { iex "& '$bin' '$($_.FullName)'" }
 	} else {
 		Write-Host "There are no targets specified to run."
 	}
