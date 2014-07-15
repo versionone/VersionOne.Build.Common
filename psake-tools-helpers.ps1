@@ -5,8 +5,16 @@ function Clean-Characters {
 		[object]$obj
 	)	
 		$obj.psobject.properties |
-		? {$_.Value.Contains(';') } |
+		? { $_.Value.GetType().Name.Equals("String") -and $_.Value.Contains(';')} |
 		% {	$_.Value = ($_.Value -replace ';', '`;') }
+
+		$obj.psobject.properties |
+		? { $_.Value.GetType().Name.Equals("Object[]") } |
+		% {	$_.Value | % { $_ = (Clean-Characters $_ ) } }
+
+		$obj.psobject.properties |
+		? { $_.Value.GetType().Name.Equals("Object") } |
+		% {	$_.Value | % { $_ = (Clean-Characters $_ ) } }
 		
 		$obj
 }
@@ -381,4 +389,23 @@ function Compress-ZipFiles( )
 	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 	[System.IO.Compression.ZipFile]::CreateFromDirectory($sourcedir,
 	    $zipfilename, $compressionLevel, $false)
+}
+
+function Compress-FileList()
+{
+	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
+	if($config.zip -ne $null){
+		$config.zip | 
+		% { 
+			$zipFilePath = "$baseDirectory\$($_.name)_$version.zip"
+			if(Test-Path $zipFilePath) { Remove-Item $zipFilePath }
+			$archive = [System.IO.Compression.ZipFile]::Open($zipFilePath,"Update" )	
+			$_.filesToZip.Split(",") | 
+			% {
+				$file = Get-NewestFilePath $baseDirectory $_
+				$null = [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file, $_, $compressionLevel)
+			}
+			$archive.Dispose()
+		}
+	}
 }
