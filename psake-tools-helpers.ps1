@@ -380,7 +380,7 @@ function Publish-CatalogFromGitShow {
 	}	
 }
 
-function Compress-ZipFiles( )
+function Compress-Folder( )
 {	
 	param([string]$project)
 	$sourcedir = (pwd).Path + "\$project\bin\$($config.configuration)"
@@ -392,18 +392,20 @@ function Compress-ZipFiles( )
 	    $zipfilename, $compressionLevel, $false)
 }
 
-function Compress-FileList()
+function Compress-FileList
 {
+	param([string]$path)
 	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 	if($config.zip -ne $null){
 		$config.zip | 
 		% { 
-			$zipFilePath = "$baseDirectory\$($_.name)_$version.zip"
+			$zipFilePath = "$path\$($_.name)_$version.zip"
+			Write-Host $zipFilePath
 			if(Test-Path $zipFilePath) { Remove-Item $zipFilePath }
-			$archive = [System.IO.Compression.ZipFile]::Open($zipFilePath,"Update" )	
+			$archive = [System.IO.Compression.ZipFile]::Open($zipFilePath,"Update")	
 			$_.filesToZip.Split(",") | 
 			% {
-				$file = Get-NewestFilePath $baseDirectory $_
+				$file = Get-NewestFilePath $path $_
 				$null = [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file, $_, $compressionLevel)
 			}
 			$archive.Dispose()

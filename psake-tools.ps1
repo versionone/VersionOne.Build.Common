@@ -188,8 +188,14 @@ task publishCatalogFromGitShow {
     exec { Publish-CatalogFromGitShow }
 }
 
-task zipFiles {
+task zipFolder {
 
-	Get-ProjectsToZip | % { Compress-ZipFiles $_ }
+	Get-ProjectsToZip | % { Compress-Folder $_ }
+
+}
+
+task zipFiles { 
+
+    Compress-FileList $baseDirectory
 
 }
