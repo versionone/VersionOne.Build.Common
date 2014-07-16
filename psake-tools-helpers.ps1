@@ -395,6 +395,9 @@ function Compress-Folder( )
 function Compress-FileList
 {
 	param([string]$path)
+	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
+	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFile")
+	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFileExtensions")
 	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 	if($config.zip -ne $null){
 		$config.zip | 
