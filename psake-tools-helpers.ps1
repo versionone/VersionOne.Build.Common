@@ -85,6 +85,11 @@ function Get-GeneratePackageCommand {
 	".\\.nuget\nuget.exe pack $project -Verbosity Detailed -Version $version -prop Configuration=$($config.configuration)"
 }
 
+function Get-GeneratePackageCommandFromNuspec {
+    param([string]$nuspecFilePath)
+	".\\.nuget\nuget.exe pack $nuspecFilePath -Verbosity Detailed"
+}
+
 function Get-PushMygetCommand {
 	param([string]$apiKey,[string]$repoUrl)
 	".\\.nuget\nuget.exe push *.nupkg $apiKey -Source $repoUrl"
