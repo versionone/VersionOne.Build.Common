@@ -171,14 +171,14 @@ function Get-Version {
 
 function Get-PreExtensions {
 	param([string]$path)
-    ,@(gci *.ps1 -Path $path | 
+    [array](gci *.ps1 -Path $path | 
 	? { $_.FullName -match "pre.[0-9]{3}\..*?\.ps1" }  | 
     sort FullName)
 }
 
 function Get-PostExtensions {
 	param([string]$path)
-	,@(gci *.ps1 -Path $path | 
+	[array](gci *.ps1 -Path $path | 
 	? { $_.FullName -match "post.[0-9]{3}\..*?\.ps1" }  | 
     sort FullName)
 }
