@@ -385,20 +385,19 @@ function Publish-CatalogFromGitShow {
 	}	
 }
 
-function Compress-Folder( )
-{	
-	param([string]$project)
-	$sourcedir = (pwd).Path + "\$project\bin\$($config.configuration)"
-	$zipfilename = (pwd).Path + "\$project.$version.zip"
-	
-	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
+function Compress-Folder {
+    param($targetFolder, $zipPathDestination)
+    
+    $zipFileName = Split-Path $zipPathDestination -Leaf
+	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null
 	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
-	[System.IO.Compression.ZipFile]::CreateFromDirectory($sourcedir,
-	    $zipfilename, $compressionLevel, $false)
+	[System.IO.Compression.ZipFile]::CreateFromDirectory($targetFolder,
+	    "$Env:TEMP\$zipFileName", $compressionLevel, $false)        
+        
+    Move-Item -Path "$Env:TEMP\$zipFileName" -Destination $zipPathDestination -Force        
 }
 
-function Compress-FileList
-{
+function Compress-FileList {
 	param([string]$path)
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFile")

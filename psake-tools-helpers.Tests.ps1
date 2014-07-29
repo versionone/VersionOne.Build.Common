@@ -390,3 +390,15 @@ Describe "Get-InstallNSpecCommand" {
 		}
 	}
 }
+
+Describe "Compress-Folder" {
+	Context "when calling it with a path with 3 files" {
+        $files = "one.dll","two.txt", "three.sln"		
+	    $files | % { Setup -File $_ '' }
+        Compress-Folder "$TestDrive" "$TestDrive\test.zip"        
+        
+		It "compresses the 3 files into a zip specified as a parameter" {            
+            Test-Path "$TestDrive\test.zip" | Should be $true
+		}
+	}
+}
