@@ -77,7 +77,7 @@ function Get-RestorePackagesCommand {
 }
 
 function Get-UpdatePackagesCommand {
-	".\\.nuget\nuget.exe update $($config.solution) -Source $($config.nugetSources)"
+	".\\.nuget\nuget.exe update $($config.solution) -Source $($config.nugetSources) -NonInteractive -FileConflictAction Overwrite"
 }
 
 function Get-GeneratePackageCommand {

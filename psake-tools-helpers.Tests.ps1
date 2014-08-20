@@ -336,7 +336,7 @@ Describe "Get-UpdatePackagesCommand" {
 		$config = Setup-Object
 		It "should return the expected command with the values from the configuration file" {		
 			Get-UpdatePackagesCommand |
-			Should Be '.\\.nuget\nuget.exe update MySolution.sln -Source http://packages.nuget.org/api/v2/`;http://packages.otherSource.org'
+			Should Be '.\\.nuget\nuget.exe update MySolution.sln -Source http://packages.nuget.org/api/v2/`;http://packages.otherSource.org -NonInteractive -FileConflictAction Overwrite'
 		}
 	}
 }
