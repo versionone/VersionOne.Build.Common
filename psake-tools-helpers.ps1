@@ -225,8 +225,12 @@ function Invoke-NspecTests {
 function Invoke-MsTests {
 	param([string]$path)
 	$target = Get-Tests $path
-	$bin = Get-NewestFilePath (Get-ChildItem -path $env:systemdrive\ -filter "mstest.exe" -erroraction silentlycontinue -recurse)[0].FullName
-	Invoke-TestsRunner "$bin /testcontainer:"  $target
+	for($i=0;$i -lt $target.Length;$i++){
+		$target[$i] = "/testcontainer:$($target[$i])"
+    }
+	#$bin = Get-NewestFilePath (Get-ChildItem -path $env:systemdrive\ -filter "mstest.exe" -erroraction silentlycontinue -recurse)[0].FullName
+	$bin = "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\MSTest.exe"
+	Invoke-TestsRunner $bin  $target
 }
 
 function Invoke-TestsRunner {
