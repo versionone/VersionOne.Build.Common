@@ -75,6 +75,10 @@ task runNspecTests -depends installNSpecRunners {
     exec{ Invoke-NspecTests $baseDirectory }
 }
 
+task runMsTests {
+    exec{ Invoke-MsTests $baseDirectory }
+}
+
 task setUpNuget {
 	New-NugetDirectory $baseDirectory
 	Get-NugetBinary $baseDirectory

@@ -155,18 +155,27 @@ function Update-Assemblies {
 
 function Get-Version {
 	param([DateTime]$currentUtcDate, [string]$buildNumber)
-	$year = $currentUtcDate.ToString("yy")		
-	if( -not $buildNumber) { $buildNumber = $currentUtcDate.ToString("HHmm") }
-	
-	$dayOfyear = $currentUtcDate.DayOfYear
-	if(([string]$dayOfyear).Length -eq 1){
-		$dayOfyear=  "00" + $dayOfyear
+	if(($config.version -ne $null) -and ($config.version -match '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')){
+		$version = $config.version
 	}
-	elseif(([string]$dayOfyear).Length -eq 2){
-		$dayOfyear = "0" + $dayOfyear
+	else {
+		$year = $currentUtcDate.ToString("yy")		
+		if( -not $buildNumber) { $buildNumber = $currentUtcDate.ToString("HHmm") }
+
+		$dayOfyear = $currentUtcDate.DayOfYear
+		if(([string]$dayOfyear).Length -eq 1){
+			$dayOfyear=  "00" + $dayOfyear
+		}
+		elseif(([string]$dayOfyear).Length -eq 2){
+			$dayOfyear = "0" + $dayOfyear
+		}
+		$version = "$($config.major).$($config.minor).$year$dayOfyear.$buildNumber"
 	}
-	
-	"$($config.major).$($config.minor).$year$dayOfyear.$buildNumber"
+	Write-Host $config.version
+	Write-Host ($config.version -ne $null)
+	Write-Host ($config.version -match '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+
+	return $version
 }
 
 function Get-PreExtensions {
@@ -211,6 +220,13 @@ function Invoke-NspecTests {
 	$target = Get-Tests $path
 	$bin = Get-NewestFilePath "$path\packages" "NSpecRunner.exe"
 	Invoke-TestsRunner $bin $target
+}
+
+function Invoke-MsTests {
+	param([string]$path)
+	$target = Get-Tests $path
+	$bin = Get-NewestFilePath (Get-ChildItem -path $env:systemdrive\ -filter "mstest.exe" -erroraction silentlycontinue -recurse)[0].FullName
+	Invoke-TestsRunner "$bin /testcontainer:"  $target
 }
 
 function Invoke-TestsRunner {
