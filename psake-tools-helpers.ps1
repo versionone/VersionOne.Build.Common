@@ -227,7 +227,7 @@ function Invoke-MsTests {
 	$target = Get-Tests $path
 	#$bin = Get-NewestFilePath (Get-ChildItem -path $env:systemdrive\ -filter "mstest.exe" -erroraction silentlycontinue -recurse)[0].FullName
 	$bin = "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\MSTest.exe"
-	$target | % { iex "& '$bin' /testcontainer:'$($_.FullName)'" }
+	$target | % { Write-Host "& '$bin' /testcontainer:'$($_.FullName)' /resultsfile:'$env:WORKSPACE\$($_.Name -replace '.dll', '.TestResults.xml')'" }
 }
 
 function Invoke-TestsRunner {
