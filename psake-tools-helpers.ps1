@@ -142,11 +142,36 @@ function Update-Assemblies {
         echo Updating file $file.FullName
 		$tmp = ($file.FullName + ".tmp")
 		if (test-path ($tmp)) { remove-item $tmp }
+		if ($config.assemblyInfo -ne $null){
+			$config.assemblyinfo |
+			% {
+				if((get-item $file.DirectoryName).Parent.Name -eq $_.id)
+				{
+					$assemblyContent = `
+"using System;
+using System.Reflection;
+using System.Resources;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+[assembly: AssemblyVersion(""$version"")]
+[assembly: AssemblyFileVersion(""$version"")]
+
+[assembly: AssemblyProduct(""$($_.product)"")]
+[assembly: AssemblyTitle(""$($_.title)"")]
+[assembly: AssemblyDescription(""$($_.description)"")]
+[assembly: AssemblyCompany(""$($_.company)"")]
+[assembly: AssemblyCopyright(""$($_.copyright)"")]
+[assembly: AssemblyConfiguration(""$($config.configuration)"")]" > $tmp
+				}
+			}
 			
-		(gc $file.FullName) |
-		% {$_ -replace $versionFilePattern, $versionAssemblyFile } | 
-		% {$_ -replace $versionPattern, $versionAssembly } `
-		> $tmp
+		}
+		else {
+			(gc $file.FullName) |
+			% {$_ -replace $versionFilePattern, $versionAssemblyFile } | 
+			% {$_ -replace $versionPattern, $versionAssembly } `
+			> $tmp
+		}	
 
 		if (test-path ($file.FullName)) { remove-item $file.FullName }
 		move-item $tmp $file.FullName -force			
@@ -171,10 +196,6 @@ function Get-Version {
 		}
 		$version = "$($config.major).$($config.minor).$year$dayOfyear.$buildNumber"
 	}
-	Write-Host $config.version
-	Write-Host ($config.version -ne $null)
-	Write-Host ($config.version -match '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
-
 	return $version
 }
 
