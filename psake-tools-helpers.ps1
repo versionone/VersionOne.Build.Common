@@ -162,6 +162,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany(""$($_.company)"")]
 [assembly: AssemblyCopyright(""$($_.copyright)"")]
 [assembly: AssemblyConfiguration(""$($config.configuration)"")]" > $tmp
+				if (test-path ($file.FullName)) { remove-item $file.FullName }
+				move-item $tmp $file.FullName -force	
 				}
 			}
 			
@@ -171,10 +173,9 @@ using System.Runtime.InteropServices;
 			% {$_ -replace $versionFilePattern, $versionAssemblyFile } | 
 			% {$_ -replace $versionPattern, $versionAssembly } `
 			> $tmp
-		}	
-
-		if (test-path ($file.FullName)) { remove-item $file.FullName }
-		move-item $tmp $file.FullName -force			
+			if (test-path ($file.FullName)) { remove-item $file.FullName }
+			move-item $tmp $file.FullName -force	
+		}			
 	}    
 }
 
