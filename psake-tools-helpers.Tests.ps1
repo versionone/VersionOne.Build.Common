@@ -402,3 +402,79 @@ Describe "Compress-Folder" {
 		}
 	}
 }
+
+Describe "IsPathRooted" {
+	Context "when calling it with a relative path" {
+		$result = IsPathRooted -Path "my\relative\path"
+
+		It "returns false" {
+			$result | Should be $false
+		}
+	}
+
+	Context "when calling it with a rooted path" {
+		$result = IsPathRooted -Path "C:\my\rooted\path"
+
+		It "returns true" {
+			$result | Should be $true
+		}
+	}
+}
+
+Describe "RootPath" {
+	Context "when calling it with a relative path" {
+		$result = RootPath -Path "C:\root" -ChildPath "my\relative\path"
+
+		It "returns false" {
+			$result | Should be "C:\root\my\relative\path"
+		}
+	}
+
+	Context "when calling it with a rooted path" {
+		$result = RootPath -Path "C:\root" -ChildPath "C:\my\rooted\path"
+
+		It "returns true" {
+			$result | Should be "C:\my\rooted\path"
+		}
+	}
+}
+
+Describe "Compress-Files" {
+	Context "when calling it with three files" {
+		$files = "one.dll", "two.dll", "three.sln"
+		$files | % { Setup -File $_ '' }
+
+		Mock Get-Location { return @{ Path = $TestDrive } }
+		Compress-Files -ZipPath "$TestDrive\test.zip" -Files $files
+
+		It "creates an empty zip file" {
+			$archive = [System.IO.Compression.ZipFile]::Open("$TestDrive\test.zip","Read")
+			$entriesCount = $archive.Entries.Count
+			$archive.Dispose()
+
+			$entriesCount | Should be 3
+		}
+	}
+
+	Context "when calling it with a directory path" {
+		$files = "myFolder\one.dll", "myFolder\two.dll", "myFolder\three.sln"
+		$files | % { Setup -File $_ '' }
+
+		Mock Get-Location { return @{ Path = $TestDrive } }
+		Compress-Files -ZipPath "$TestDrive\test.zip" -Files "myFolder"
+
+		It "creates an empty zip file" {
+			$archive = [System.IO.Compression.ZipFile]::Open("$TestDrive\test.zip","Read")
+			$entriesCount = $archive.Entries.Count
+			$entryOne = $archive.Entries[0].FullName
+			$entryTwo = $archive.Entries[1].FullName
+			$entryThree = $archive.Entries[2].FullName
+			$archive.Dispose()
+
+			$entriesCount | Should be 3
+			$entryOneName | Should be "myFolder\one.dll"
+			$entryTwoName | Should be "myFolder\two.dll"
+			$entryThreeName | Should be "myFolder\three.dll"
+		}
+	}
+}

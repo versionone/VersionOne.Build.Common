@@ -117,5 +117,5 @@ task zipProjects {
 }
 
 task zipFiles {
-    Compress-FileList $baseDirectory
+    Compress-Files -ZipPath $config.zip.name -Files $config.zip.filesToZip.Split(",")
 }

@@ -458,3 +458,53 @@ function Compress-FileList {
 		}
 	}
 }
+
+function IsPathRooted {
+	Param([String] $Path)
+	return [System.IO.Path]::IsPathRooted("$Path")
+}
+
+function RootPath {
+	Param([String] $Path,
+		[String] $ChildPath)
+	if (IsPathRooted $ChildPath) {
+		return $ChildPath
+	}
+
+	return Join-Path -Path $Path -ChildPath $ChildPath
+}
+
+function Compress-Files {
+	Param(
+		[parameter(Mandatory=$true)] [String] $ZipPath,
+		[parameter(Mandatory=$true, ValueFromPipeline=$true)] [String[]] $Files
+		)
+	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
+	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFile")
+	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFileExtensions")
+	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
+
+  try{
+  	$archive = [System.IO.Compression.ZipFile]::Open($ZipPath,"Update")
+  	$Files | % {
+			$rootedPath = RootPath -Path (Get-Location).Path -ChildPath $_
+			if (Test-Path $rootedPath -pathType leaf) {
+				[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $rootedPath, $_, $compressionLevel)
+			}
+			else {
+				$parent = (Get-Item $rootedPath).Parent.FullName
+				Get-ChildItem $rootedPath -recurse | Where-Object {!($_.PSIsContainer)} | % {
+					$entryName = $_.FullName.Replace($parent, "")
+					if ($entryName.StartsWith('\')) {
+						$entryName = $entryName.Substring(1)
+					}
+					[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $_.FullName, $entryName, $compressionLevel)
+				}
+			}
+		}
+	}
+  finally {
+  	$archive.Dispose()
+  }
+	
+}
