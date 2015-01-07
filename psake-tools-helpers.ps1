@@ -3,7 +3,7 @@ function Clean-Characters {
 	param(
 		[Parameter(Mandatory=$true, ValueFromPipeline=$true)]
 		[object]$obj
-	)	
+	)
 		$obj.psobject.properties |
 		? { $_.Value.GetType().Name.Equals("String") -and $_.Value.Contains(';')} |
 		% {	$_.Value = ($_.Value -replace ';', '`;') }
@@ -15,16 +15,16 @@ function Clean-Characters {
 		$obj.psobject.properties |
 		? { $_.Value.GetType().Name.Equals("Object") } |
 		% {	$_.Value | % { $_ = (Clean-Characters $_ ) } }
-		
+
 		$obj
 }
 
 
 function Get-ConfigObjectFromFile {
 	param([string]$fileName)
-	
-	gc $fileName -Raw | 
-	ConvertFrom-Json |	
+
+	gc $fileName -Raw |
+	ConvertFrom-Json |
 	Clean-Characters
 }
 
@@ -44,7 +44,7 @@ function Get-EnvironmentVariableOrDefault {
 
 function Get-NewestFilePath {
 	param([string]$startingPath,[string]$file)
-	
+
 	$paths = @(ls -r -Path $startingPath -filter $file | sort FullName -descending)
 	$paths[0].FullName
 }
@@ -109,7 +109,7 @@ function Get-InstallNSpecCommand {
 }
 
 function Get-ProjectsToPackage {
-    ($config.projectToPackage).Split(",")    
+    ($config.projectToPackage).Split(",")
 }
 
 function Get-ProjectsToZip {
@@ -119,24 +119,24 @@ function Get-ProjectsToZip {
 function Get-Assemblies {
 	param([string]$startingPath)
 	if (-not $startingPath) { $startingPath = (pwd).Path }
-	
-	@(ls -r -path $startingPath -filter AssemblyInfo.cs) + 
+
+	@(ls -r -path $startingPath -filter AssemblyInfo.cs) +
 	@(ls -r -path $startingPath -filter AssemblyInfo.fs)
 }
 
 function Update-Assemblies {
 	param(
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]        
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         $file
 	)
-	
+
 	begin {
 		$versionPattern = 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
 		$versionAssembly = 'AssemblyVersion("' + $version + '")';
 		$versionFilePattern = 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)'
 		$versionAssemblyFile = 'AssemblyFileVersion("' + $version + '")'
 	}
-	
+
 	process
 	{
         echo Updating file $file.FullName
@@ -163,20 +163,20 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright(""$($_.copyright)"")]
 [assembly: AssemblyConfiguration(""$($config.configuration)"")]" > $tmp
 				if (test-path ($file.FullName)) { remove-item $file.FullName }
-				move-item $tmp $file.FullName -force	
+				move-item $tmp $file.FullName -force
 				}
 			}
-			
+
 		}
 		else {
 			(gc $file.FullName) |
-			% {$_ -replace $versionFilePattern, $versionAssemblyFile } | 
+			% {$_ -replace $versionFilePattern, $versionAssemblyFile } |
 			% {$_ -replace $versionPattern, $versionAssembly } `
 			> $tmp
 			if (test-path ($file.FullName)) { remove-item $file.FullName }
-			move-item $tmp $file.FullName -force	
-		}			
-	}    
+			move-item $tmp $file.FullName -force
+		}
+	}
 }
 
 function Get-Version {
@@ -185,7 +185,7 @@ function Get-Version {
 		$version = $config.version
 	}
 	else {
-		$year = $currentUtcDate.ToString("yy")		
+		$year = $currentUtcDate.ToString("yy")
 		if( -not $buildNumber) { $buildNumber = $currentUtcDate.ToString("HHmm") }
 
 		$dayOfyear = $currentUtcDate.DayOfYear
@@ -202,21 +202,21 @@ function Get-Version {
 
 function Get-PreExtensions {
 	param([string]$path)
-    [array](gci *.ps1 -Path $path | 
-	? { $_.FullName -match "pre.[0-9]{3}\..*?\.ps1" }  | 
+    [array](gci *.ps1 -Path $path |
+	? { $_.FullName -match "pre.[0-9]{3}\..*?\.ps1" }  |
     sort FullName)
 }
 
 function Get-PostExtensions {
 	param([string]$path)
-	[array](gci *.ps1 -Path $path | 
-	? { $_.FullName -match "post.[0-9]{3}\..*?\.ps1" }  | 
+	[array](gci *.ps1 -Path $path |
+	? { $_.FullName -match "post.[0-9]{3}\..*?\.ps1" }  |
     sort FullName)
 }
 
 function Invoke-Extensions {
 	param([Parameter(Mandatory=$false,ValueFromPipeline=$true)]$extension)
-	
+
 	process {
 		if(-not $extension) { return }
         echo "The next extension has been loaded: $($extension.Name)"
@@ -226,7 +226,7 @@ function Invoke-Extensions {
 
 function Get-Tests {
 	param([string]$path)
-	,@(ls -r *.Tests.dll -Path $path | 
+	,@(ls -r *.Tests.dll -Path $path |
 	? { $_.FullName -like "*\bin\$($config.configuration)\*.Tests.dll" })
 }
 
@@ -254,7 +254,7 @@ function Invoke-MsTests {
 
 function Invoke-TestsRunner {
 	param($bin,$target)
-    
+
 	if ($target.Length -ne 0) {
 		$target | % { iex "& '$bin' '$($_.FullName)'" }
 	} else {
@@ -282,7 +282,7 @@ function Publish-Documentation {
 
 function Get-PublishCatalogConfig {
     param([string]$fileName)
-    
+
 	if (Test-Path $fileName) {
 		Get-Content $fileName -Raw | ConvertFrom-Json
 	}
@@ -290,20 +290,20 @@ function Get-PublishCatalogConfig {
 
 function Publish-Catalog {
     param([string]$productFile='product.json')
-    
+
 	$staging = Get-PublishCatalogConfig 'staging.json'
-	
+
     if ($staging -eq $null) {
         $staging = @{}
 		$staging.url = $Env:staging_url;
 		$staging.username = $Env:staging_username;
 		$staging.password = $Env:staging_password;
 	}
-	
+
 	if (-not (Test-Path $productFile)) {
 		"File $productFile does not exist. Upload aborted."
-	}	
-	
+	}
+
     try{
 	    $response = Invoke-WebRequest `
 		    -Uri $staging.url `
@@ -326,24 +326,24 @@ function Publish-Catalog {
 	        throw $_.Exception
 	    }
 	}
-        
+
     if ($response.StatusCode -ne "200") {
-        throw $response.Content					
+        throw $response.Content
     }
-    
+
     Write-Host $response.Content
 }
 
 function Promote-Catalog {
-    param([string]$productId)   
-	
+    param([string]$productId)
+
 	$staging = Get-PublishCatalogConfig 'staging.json'
-    
+
 	if ($staging -eq $null) {
         $staging = @{}
 		$staging.url = $Env:staging_url;
 	}
-	
+
 	$production = Get-PublishCatalogConfig 'production.json'
 	if ($production -eq $null) {
         $production = @{}
@@ -351,25 +351,25 @@ function Promote-Catalog {
 		$production.username = $Env:production_username;
 		$production.password = $Env:production_password;
 	}
-    
+
 	$parameters = @{'id'= $productId}
-	
+
 	$stagingResponse = Invoke-WebRequest `
 	    -Uri $staging.url `
 	    -Method Get `
 	    -Body $parameters
-	
+
 	Write-Debug "staging: $($stagingResponse.StatusCode) - $($stagingResponse.StatusDescription)"
-	
+
 	$productionResponse = Invoke-WebRequest `
 	    -Uri $production.url `
 	    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($production.username+":"+$production.password ))} `
 	    -Method Put `
 	    -Body $stagingResponse.Content `
 	    -ContentType 'application/json'
-	
+
 	Write-Debug "production: $($productionResponse.StatusCode) - $($productionResponse.StatusDescription)"
-	
+
 	$productionResponse
 }
 
@@ -381,9 +381,9 @@ function Publish-CatalogFromGitShow {
 		$staging.username = $Env:staging_username;
 		$staging.password = $Env:staging_password;
 	}
-	
+
 	$git_files =  git show --name-only --pretty="format:"
-	
+
 	foreach($git_file in $git_files){
 		if($git_file -ne "") {
 			if ((Test-Path $git_file) -and ($git_file.EndsWith(".json",1))) {
@@ -394,8 +394,8 @@ function Publish-CatalogFromGitShow {
 					    -Headers @{"Authorization" = "Basic "+[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($staging.username+":"+$staging.password ))} `
 					    -Method Put `
 					    -InFile $git_file `
-					    -ContentType 'application/json'				
-					
+					    -ContentType 'application/json'
+
 					Write-Debug " > $($stagingResponse.StatusCode) - $($stagingResponse.StatusDescription)"
 				}
 				catch {
@@ -414,26 +414,26 @@ function Publish-CatalogFromGitShow {
 				}
 
 
-                
+
                 Write-Host $stagingResponse.Content
 			}
 			else{
 				Write-Debug "Nothing to do."
 			}
 		}
-	}	
+	}
 }
 
 function Compress-Folder {
     param($targetFolder, $zipPathDestination)
-    
+
     $zipFileName = Split-Path $zipPathDestination -Leaf
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null
 	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 	[System.IO.Compression.ZipFile]::CreateFromDirectory($targetFolder,
-	    "$Env:TEMP\$zipFileName", $compressionLevel, $false)        
-        
-    Move-Item -Path "$Env:TEMP\$zipFileName" -Destination $zipPathDestination -Force        
+	    "$Env:TEMP\$zipFileName", $compressionLevel, $false)
+
+    Move-Item -Path "$Env:TEMP\$zipFileName" -Destination $zipPathDestination -Force
 }
 
 function Compress-FileList {
@@ -443,13 +443,13 @@ function Compress-FileList {
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFileExtensions")
 	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 	if($config.zip -ne $null){
-		$config.zip | 
-		% { 
+		$config.zip |
+		% {
 			$zipFilePath = "$path\$($_.name)_$version.zip"
 			Write-Host $zipFilePath
 			if(Test-Path $zipFilePath) { Remove-Item $zipFilePath }
-			$archive = [System.IO.Compression.ZipFile]::Open($zipFilePath,"Update")	
-			$_.filesToZip.Split(",") | 
+			$archive = [System.IO.Compression.ZipFile]::Open($zipFilePath,"Update")
+			$_.filesToZip.Split(",") |
 			% {
 				$file = Get-NewestFilePath $path $_
 				$null = [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file, $_, $compressionLevel)
@@ -460,40 +460,47 @@ function Compress-FileList {
 }
 
 function IsPathRooted {
-	Param([String] $Path)
+	Param(
+		[Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+		[String] $Path)
 	return [System.IO.Path]::IsPathRooted("$Path")
 }
 
-function RootPath {
-	Param([String] $Path,
-		[String] $ChildPath)
-	if (IsPathRooted $ChildPath) {
-		return $ChildPath
+function Root-Path {
+	Param(
+		[Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+		[String] $Path,
+
+		[String] $Parent = (Get-Location).Path)
+	
+	if (IsPathRooted $Path) {
+		return $Path
 	}
 
-	return Join-Path -Path $Path -ChildPath $ChildPath
+	return Join-Path -Path $Parent -ChildPath $Path
 }
 
 function Compress-Files {
 	Param(
 		[parameter(Mandatory=$true)] [String] $ZipPath,
-		[parameter(Mandatory=$true, ValueFromPipeline=$true)] [String[]] $Files
-		)
+		[parameter(Mandatory=$true, ValueFromPipeline=$true)] [String[]] $Files)
+
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFile")
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFileExtensions")
 	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 
   try{
-  	$archive = [System.IO.Compression.ZipFile]::Open($ZipPath,"Update")
+  	$archive = [System.IO.Compression.ZipFile]::Open((Root-Path $ZipPath),"Update")
   	$Files | % {
-			$rootedPath = RootPath -Path (Get-Location).Path -ChildPath $_
+			$rootedPath = Root-Path $_
 			if (Test-Path $rootedPath -pathType leaf) {
-				[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $rootedPath, $_, $compressionLevel)
+				$entryName = Split-Path -Path $rootedPath -Leaf
+				[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $rootedPath, $entryName, $compressionLevel)
 			}
 			else {
 				$parent = (Get-Item $rootedPath).Parent.FullName
-				Get-ChildItem $rootedPath -recurse | Where-Object {!($_.PSIsContainer)} | % {
+				Get-ChildItem $rootedPath -recurse | Where-Object { !($_.PSIsContainer) } | % {
 					$entryName = $_.FullName.Replace($parent, "")
 
 					if ($entryName.StartsWith('\')) {
@@ -507,5 +514,17 @@ function Compress-Files {
   finally {
   	$archive.Dispose()
   }
-	
+}
+
+function Extract-File {
+	[CmdletBinding()]
+	param (
+		[Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+		[String] $File,
+
+		[ValidateNotNullOrEmpty()]
+		[String] $Destination = (Get-Location).Path)
+
+	[System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null
+	[System.IO.Compression.ZipFile]::ExtractToDirectory((Root-Path $File), (Root-Path $Destination))
 }

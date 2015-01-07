@@ -421,25 +421,52 @@ Describe "IsPathRooted" {
 	}
 }
 
-Describe "RootPath" {
-	Context "when calling it with a relative path" {
-		$result = RootPath -Path "C:\root" -ChildPath "my\relative\path"
+Describe "Root-Path" {
+	Context "when calling it with a relative path and a parent" {
+		$result = Root-Path -Parent "C:\root" -Path "my\relative\path"
 
-		It "returns false" {
+		It "returns the path rooted to C:\root" {
 			$result | Should be "C:\root\my\relative\path"
 		}
 	}
 
-	Context "when calling it with a rooted path" {
-		$result = RootPath -Path "C:\root" -ChildPath "C:\my\rooted\path"
+	Context "when calling it with a relative path and no parent path" {
+		Mock Get-Location { return @{ Path = "C:\current\location" } }
 
-		It "returns true" {
+		$result = Root-Path -Path "my\relative\path"
+
+		It "returns the path rooted to the current location" {
+			$result | Should be "C:\current\location\my\relative\path"
+		}
+	}
+
+	Context "when calling it with a rooted path and a parent" {
+		$result = Root-Path -Parent "C:\root" -Path "C:\my\rooted\path"
+
+		It "returns the path unchanged" {
 			$result | Should be "C:\my\rooted\path"
 		}
 	}
 }
 
 Describe "Compress-Files" {
+	Context "when calling it with a full path to a file" {
+		Setup -File "myFile.txt"
+		Compress-Files -ZipPath "$TestDrive\test.zip" -Files "$TestDrive\myFile.txt"
+
+		It "creates a zip file with myFile.txt inside" {
+			$archive = [System.IO.Compression.ZipFile]::Open("$TestDrive\test.zip","Read")
+			$actual = @{}
+			$archive.Entries | % { $actual.Add($_.Name, $_.FullName) }
+			$archive.Dispose()
+
+			$expected = @{ "myFile.txt" = "myFile.txt" }
+
+			$actual.Keys.Count | Should be $expected.Keys.Count
+			$actual.Keys | % { $actual[$_] | Should be $expected[$_] }
+		}
+	}
+
 	Context "when calling it with three files" {
 		$files = "one.dll", "two.dll", "three.sln"
 		$files | % { Setup -File $_ '' }
@@ -447,12 +474,20 @@ Describe "Compress-Files" {
 		Mock Get-Location { return @{ Path = $TestDrive } }
 		Compress-Files -ZipPath "$TestDrive\test.zip" -Files $files
 
-		It "creates an empty zip file" {
+		It "creates a zip file with these three files inside" {
 			$archive = [System.IO.Compression.ZipFile]::Open("$TestDrive\test.zip","Read")
-			$entriesCount = $archive.Entries.Count
+			$actual = @{}
+			$archive.Entries | % { $actual.Add($_.Name, $_.FullName) }
 			$archive.Dispose()
 
-			$entriesCount | Should be 3
+			$expected = @{
+				"one.dll" = "one.dll";
+				"two.dll" = "two.dll";
+				"three.sln" = "three.sln"
+			}
+
+			$actual.Keys.Count | Should be $expected.Keys.Count
+			$actual.Keys | % { $actual[$_] | Should be $expected[$_] }
 		}
 	}
 
@@ -463,7 +498,7 @@ Describe "Compress-Files" {
 		Mock Get-Location { return @{ Path = $TestDrive } }
 		Compress-Files -ZipPath "$TestDrive\test.zip" -Files "myFolder"
 
-		It "creates an zip file with the folder" {
+		It "creates a zip file with the folder" {
 			$archive = [System.IO.Compression.ZipFile]::Open("$TestDrive\test.zip","Read")
 
 			$actual = @{}
@@ -477,8 +512,60 @@ Describe "Compress-Files" {
 			}
 
 			$actual.Keys.Count | Should be $expected.Keys.Count
-			$actual.Keys | % {
-			 $actual[$_] | Should be $expected[$_]}
+			$actual.Keys | % { $actual[$_] | Should be $expected[$_] }
+		}
+	}
+}
+
+Describe "Extract-File" {
+	Context "when calling it with absolute paths" {
+		Setup -File "myFile.txt"
+		Setup -Dir "extracted"
+		Compress-Files -ZipPath "$TestDrive\test.zip" -Files "$TestDrive\myFile.txt"
+
+		Extract-File "$TestDrive\test.zip" "$TestDrive\extracted"
+
+		It "puts the zip content inside the folder named extracted" {
+			Test-Path "$TestDrive\extracted\myFile.txt" | Should be $true
+		}
+	}
+
+	Context "when calling it with a relative path to the zip file" {
+		Setup -File "myFile.txt"
+		Setup -Dir "extracted"
+		Compress-Files -ZipPath "$TestDrive\test.zip" -Files "$TestDrive\myFile.txt"
+		Mock Get-Location { return @{ Path = "$TestDrive" } }
+
+		Extract-File "test.zip" "$TestDrive\extracted"
+
+		It "puts the zip content inside the folder named extracted" {
+			Test-Path "$TestDrive\extracted\myFile.txt" | Should be $true
+		}
+	}
+
+	Context "when calling it without the destination parameter" {
+		Setup -File "myFile.txt"
+		Compress-Files -ZipPath "$TestDrive\test.zip" -Files "$TestDrive\myFile.txt"
+		Mock Get-Location { return @{ Path = $TestDrive } }
+
+		Remove-Item "$TestDrive\myFile.txt"
+		Extract-File "$TestDrive\test.zip"
+
+		It "puts the zip content inside the current location" {
+			Test-Path "$TestDrive\myFile.txt" | Should be $true
+		}
+	}
+
+	Context "when calling it with a relative destination" {
+		Setup -File "myFile.txt"
+		Setup -Dir "extracted"
+		Compress-Files -ZipPath "$TestDrive\test.zip" -Files "$TestDrive\myFile.txt"
+		Mock Get-Location { return @{ Path = "$TestDrive" } }
+
+		Extract-File "$TestDrive\test.zip" "extracted"
+
+		It "puts the zip content inside the current location" {
+			Test-Path "$TestDrive\myFile.txt" | Should be $true
 		}
 	}
 }

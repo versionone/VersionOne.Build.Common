@@ -120,3 +120,12 @@ task zipFiles {
     $files = $config.zip.filesToZip.Split(",") | % { $_.Trim() }
     Compress-Files -ZipPath $config.zip.name -Files $files
 }
+
+task extract {
+    if ($config.extract.destination) {
+        Extract-File $config.extract.name $config.extract.destination
+    }
+    else {
+        Extract-File $config.extract.name
+    }    
+}
