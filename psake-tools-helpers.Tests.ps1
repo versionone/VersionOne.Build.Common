@@ -463,18 +463,22 @@ Describe "Compress-Files" {
 		Mock Get-Location { return @{ Path = $TestDrive } }
 		Compress-Files -ZipPath "$TestDrive\test.zip" -Files "myFolder"
 
-		It "creates an empty zip file" {
+		It "creates an zip file with the folder" {
 			$archive = [System.IO.Compression.ZipFile]::Open("$TestDrive\test.zip","Read")
-			$entriesCount = $archive.Entries.Count
-			$entryOne = $archive.Entries[0].FullName
-			$entryTwo = $archive.Entries[1].FullName
-			$entryThree = $archive.Entries[2].FullName
+
+			$actual = @{}
+			$archive.Entries | % { $actual.Add($_.Name, $_.FullName) }
 			$archive.Dispose()
 
-			$entriesCount | Should be 3
-			$entryOneName | Should be "myFolder\one.dll"
-			$entryTwoName | Should be "myFolder\two.dll"
-			$entryThreeName | Should be "myFolder\three.dll"
+			$expected = @{
+				"one.dll" = "myFolder\one.dll";
+				"two.dll" = "myFolder\two.dll";
+				"three.sln" = "myFolder\three.sln"
+			}
+
+			$actual.Keys.Count | Should be $expected.Keys.Count
+			$actual.Keys | % {
+			 $actual[$_] | Should be $expected[$_]}
 		}
 	}
 }

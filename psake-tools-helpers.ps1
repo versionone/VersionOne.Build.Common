@@ -495,6 +495,7 @@ function Compress-Files {
 				$parent = (Get-Item $rootedPath).Parent.FullName
 				Get-ChildItem $rootedPath -recurse | Where-Object {!($_.PSIsContainer)} | % {
 					$entryName = $_.FullName.Replace($parent, "")
+
 					if ($entryName.StartsWith('\')) {
 						$entryName = $entryName.Substring(1)
 					}

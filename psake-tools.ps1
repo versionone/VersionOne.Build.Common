@@ -117,5 +117,6 @@ task zipProjects {
 }
 
 task zipFiles {
-    Compress-Files -ZipPath $config.zip.name -Files $config.zip.filesToZip.Split(",")
+    $files = $config.zip.filesToZip.Split(",") | % { $_.Trim() }
+    Compress-Files -ZipPath $config.zip.name -Files $files
 }
