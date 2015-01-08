@@ -515,6 +515,31 @@ Describe "Compress-Files" {
 			$actual.Keys | % { $actual[$_] | Should be $expected[$_] }
 		}
 	}
+
+	Context "when calling it with three files and a zip path that does not exists" {
+		$files = "one.dll", "two.dll", "three.sln"
+		$files | % { Setup -File $_ '' }
+
+		Mock Get-Location { return @{ Path = $TestDrive } }
+		Compress-Files -ZipPath "new\path\test.zip" -Files $files
+
+		It "creates a zip file with these three files inside new\path\test.zip" {
+			Test-Path "$TestDrive\new\path\test.zip" | Should be $true
+			$archive = [System.IO.Compression.ZipFile]::Open("$TestDrive\new\path\test.zip","Read")
+			$actual = @{}
+			$archive.Entries | % { $actual.Add($_.Name, $_.FullName) }
+			$archive.Dispose()
+
+			$expected = @{
+				"one.dll" = "one.dll";
+				"two.dll" = "two.dll";
+				"three.sln" = "three.sln"
+			}
+
+			$actual.Keys.Count | Should be $expected.Keys.Count
+			$actual.Keys | % { $actual[$_] | Should be $expected[$_] }
+		}
+	}
 }
 
 Describe "Extract-File" {

@@ -483,15 +483,23 @@ function Root-Path {
 function Compress-Files {
 	Param(
 		[parameter(Mandatory=$true)] [String] $ZipPath,
-		[parameter(Mandatory=$true, ValueFromPipeline=$true)] [String[]] $Files)
+		[parameter(Mandatory=$true)] [String[]] $Files)
 
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFile")
 	[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.ZipFileExtensions")
 	$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
-
   try{
-  	$archive = [System.IO.Compression.ZipFile]::Open((Root-Path $ZipPath),"Update")
+  	$path = Root-Path $ZipPath
+  	$parent = Split-Path $path -Parent
+
+  	## Ensure path to zip file exists
+  	if ($parent -and !(Test-Path $parent -PathType Container)) {
+  		New-Item $parent -ItemType Directory -Force
+  	}
+
+  	$archive = [System.IO.Compression.ZipFile]::Open($path,"Update")
+
   	$Files | % {
 			$rootedPath = Root-Path $_
 			if (Test-Path $rootedPath -pathType leaf) {
@@ -512,7 +520,9 @@ function Compress-Files {
 		}
 	}
   finally {
-  	$archive.Dispose()
+  	if ($archive) {
+  		$archive.Dispose()
+  	}
   }
 }
 

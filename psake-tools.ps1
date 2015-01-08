@@ -117,8 +117,10 @@ task zipProjects {
 }
 
 task zipFiles {
-    $files = $config.zip.filesToZip.Split(",") | % { $_.Trim() }
-    Compress-Files -ZipPath $config.zip.name -Files $files
+    $config.zip | % {
+        $files = $_.filesToZip.Split(",") | % { $_.Trim() }
+        Compress-Files -ZipPath $_.name -Files $files
+    }
 }
 
 task extract {
@@ -127,5 +129,5 @@ task extract {
     }
     else {
         Extract-File $config.extract.name
-    }    
+    }
 }
