@@ -160,7 +160,6 @@ Describe "Update-Assemblies" {
 			"a\b-c\d\efg\AssemblyInfo.fs"
 
 		$files | % { Setup -File $_ (Get-AssemblySample) }
-		
 		Get-Assemblies $TestDrive | Update-Assemblies > $null
 		
 		It "should update the version values for those files" {
@@ -168,6 +167,84 @@ Describe "Update-Assemblies" {
 			% { (cat $TestDrive\$_) | 
 			Should Be (Get-AssemblySampleWithNewVersion $version) }
 		 }
+	}
+
+	Context "when calling with assemblyInfo in config" {
+		$version = "0.1.2.3"
+		$cfg = @{
+			"version" = $version;
+			"assemblyInfo"= @(@{
+				"id" = "VersionOne.MyProject";
+				"product" = "VersionOne.Product";
+				"title" = "VersionOne.Title";
+				"description" = "My VersionOne product";
+				"company" = "VersionOne, Inc.";
+				"copyright" = "da kopyright"
+				})
+		}
+
+		Setup -File "VersionOne.MyProject\Properties\AssemblyInfo.cs" (Get-AssemblySample)
+		Get-Item "$TestDrive\VersionOne.MyProject\Properties\AssemblyInfo.cs" | Update-Assemblies -Cfg $cfg
+
+		It "should update assembly info" {
+			$expected = "using System;
+using System.Reflection;
+using System.Resources;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+[assembly: AssemblyVersion(""$($cfg.version)"")]
+[assembly: AssemblyFileVersion(""$($cfg.version)"")]
+
+[assembly: AssemblyProduct(""$($cfg.assemblyInfo[0].product)"")]
+[assembly: AssemblyTitle(""$($cfg.assemblyInfo[0].title)"")]
+[assembly: AssemblyDescription(""$($cfg.assemblyInfo[0].description)"")]
+[assembly: AssemblyCompany(""$($cfg.assemblyInfo[0].company)"")]
+[assembly: AssemblyCopyright(""$($cfg.assemblyInfo[0].copyright)"")]
+[assembly: AssemblyConfiguration(""$($cfg.assemblyInfo[0].configuration)"")]"
+
+			$actual = Get-Content -Raw "$TestDrive\VersionOne.MyProject\Properties\AssemblyInfo.cs"
+			$actual.Trim() | Should be $expected
+		}
+	}
+
+	Context "when calling with assemblyInfo in config and omiting a field" {
+		$version = "0.1.2.3"
+		$cfg = @{
+			"version" = $version;
+			"product" = "da product"
+			"title" = "da title"
+			"assemblyInfo"= @(@{
+				"id" = "VersionOne.MyProject";
+#no product				"product" = "VersionOne.Product";
+#no title				"title" = "VersionOne.Title";
+				"description" = "My VersionOne product";
+				"company" = "VersionOne, Inc.";
+				"copyright" = "da kopyright"
+				})
+		}
+
+		Setup -File "VersionOne.MyProject\Properties\AssemblyInfo.cs" (Get-AssemblySample)
+		Get-Item "$TestDrive\VersionOne.MyProject\Properties\AssemblyInfo.cs" | Update-Assemblies -Cfg $cfg
+
+		It "should update assembly info" {
+			$expected = "using System;
+using System.Reflection;
+using System.Resources;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+[assembly: AssemblyVersion(""$($cfg.version)"")]
+[assembly: AssemblyFileVersion(""$($cfg.version)"")]
+
+[assembly: AssemblyProduct(""$($cfg.product)"")]
+[assembly: AssemblyTitle(""$($cfg.title)"")]
+[assembly: AssemblyDescription(""$($cfg.assemblyInfo[0].description)"")]
+[assembly: AssemblyCompany(""$($cfg.assemblyInfo[0].company)"")]
+[assembly: AssemblyCopyright(""$($cfg.assemblyInfo[0].copyright)"")]
+[assembly: AssemblyConfiguration(""$($cfg.assemblyInfo[0].configuration)"")]"
+
+			$actual = Get-Content -Raw "$TestDrive\VersionOne.MyProject\Properties\AssemblyInfo.cs"
+			$actual.Trim() | Should be $expected
+		}
 	}
 }
 
@@ -347,7 +424,7 @@ Describe "Get-GeneratePackageCommand" {
 		$version = "1.2.3.4"
 		It "should return the expected command with the values from the configuration file" {		
 			Get-GeneratePackageCommand "MyPackageProject.csproj" | 
-			Should Be '.\\.nuget\nuget.exe pack MyPackageProject.csproj -Verbosity Detailed -Version 1.2.3.4 -prop Configuration=Release'
+			Should Be '.\\.nuget\nuget.exe pack MyPackageProject.csproj -Verbosity Detailed -Version 1.2.3.4 -prop "Configuration=Release"'
 		}
 	}
 }
@@ -591,6 +668,18 @@ Describe "Extract-File" {
 
 		It "puts the zip content inside the current location" {
 			Test-Path "$TestDrive\myFile.txt" | Should be $true
+		}
+	}
+}
+
+Describe "Stringify-Config" {
+	Context "when calling it with the config object" {
+		$cfg = New-Object PSObject -Property @{
+			"version" = "1.0.0.0"
+		}
+
+		It "returns the string 'version=1.0.0.0;" {
+			Stringify $cfg | Should be "version=1.0.0.0;"
 		}
 	}
 }

@@ -18,7 +18,7 @@ task jenkins -depends runPreExtensions,restoreAndUpdatePackages,build,runNunitTe
 #tasks
 
 task setAssemblyInfo {
-	Get-Assemblies $baseDirectory | Update-Assemblies
+	Get-Assemblies $baseDirectory | Update-Assemblies -Cfg $config
 }
 
 task build -depends clean,setAssemblyInfo {

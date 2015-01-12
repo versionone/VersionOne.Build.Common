@@ -82,7 +82,12 @@ function Get-UpdatePackagesCommand {
 
 function Get-GeneratePackageCommand {
     param([string]$project)
-	".\\.nuget\nuget.exe pack $project -Verbosity Detailed -Version $version -prop Configuration=$($config.configuration)"
+
+    $props = "Configuration=$($config.configuration)"
+    if ($config.nuspecTokens) {
+    	$props = $props + ";" + (Stringify $config.nuspecTokens)
+    }
+    ".\\.nuget\nuget.exe pack $project -Verbosity Detailed -Version $version -prop ""$props"""
 }
 
 function Get-GeneratePackageCommandFromNuspec {
@@ -127,7 +132,8 @@ function Get-Assemblies {
 function Update-Assemblies {
 	param(
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
-        $file
+        $file,
+        $cfg
 	)
 
 	begin {
@@ -139,16 +145,19 @@ function Update-Assemblies {
 
 	process
 	{
-        echo Updating file $file.FullName
+    echo Updating file $file.FullName
 		$tmp = ($file.FullName + ".tmp")
 		if (test-path ($tmp)) { remove-item $tmp }
-		if ($config.assemblyInfo -ne $null){
-			$config.assemblyinfo |
-			% {
-				if((get-item $file.DirectoryName).Parent.Name -eq $_.id)
-				{
-					$assemblyContent = `
-"using System;
+		if ($cfg.assemblyInfo -ne $null){
+			$info = $cfg.assemblyInfo | Where-Object { (get-item $file.DirectoryName).Parent.Name -eq $_.id }
+			if ($info) {
+				$product = if($info.product) { $info.product } else { $cfg.product }
+				$title = if($info.title) { $info.title } else { $cfg.title }
+				$description = if($info.description) { $info.description } else { $cfg.description }
+				$company = if($info.company) { $info.company } else { $cfg.company }
+				$copyright = if($info.copyright) { $info.copyright } else { $cfg.copyright }
+
+				"using System;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
@@ -156,17 +165,16 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion(""$version"")]
 [assembly: AssemblyFileVersion(""$version"")]
 
-[assembly: AssemblyProduct(""$($_.product)"")]
-[assembly: AssemblyTitle(""$($_.title)"")]
-[assembly: AssemblyDescription(""$($_.description)"")]
-[assembly: AssemblyCompany(""$($_.company)"")]
-[assembly: AssemblyCopyright(""$($_.copyright)"")]
-[assembly: AssemblyConfiguration(""$($config.configuration)"")]" > $tmp
-				if (test-path ($file.FullName)) { remove-item $file.FullName }
-				move-item $tmp $file.FullName -force
-				}
-			}
+[assembly: AssemblyProduct(""$($product)"")]
+[assembly: AssemblyTitle(""$($title)"")]
+[assembly: AssemblyDescription(""$($description)"")]
+[assembly: AssemblyCompany(""$($company)"")]
+[assembly: AssemblyCopyright(""$($copyright)"")]
+[assembly: AssemblyConfiguration(""$($cfg.configuration)"")]" > $tmp
 
+			if (test-path ($file.FullName)) { remove-item $file.FullName }
+				move-item $tmp $file.FullName -force
+			}
 		}
 		else {
 			(gc $file.FullName) |
@@ -537,4 +545,14 @@ function Extract-File {
 
 	[System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null
 	[System.IO.Compression.ZipFile]::ExtractToDirectory((Root-Path $File), (Root-Path $Destination))
+}
+
+function Stringify {
+	param ([Parameter(Mandatory=$true)] $obj)
+
+	$result = ""
+	$obj.psobject.properties | % {
+		$result = $result + "$($_.Name)=$($_.Value);"
+	}
+	return $result
 }
