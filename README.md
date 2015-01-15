@@ -10,10 +10,10 @@ Want to start right away? Create the next two files at the directory you have th
 ###build.properties.json:
 ```json
 {
-    "solution": "yourSolution.sln",    
+    "solution": "yourSolution.sln",
     "nugetSources": "http://packages.nuget.org/api/v2/;http://www.myget.org/F/versionone/api/v2/",
     "configuration": "Release",
-    "platform": "Any CPU",    
+    "platform": "Any CPU",
     "major": "1",
     "minor": "3"
 }
@@ -27,7 +27,7 @@ param(
 )
 
 function DownloadSetup {
-    $source = "https://raw.github.com/openAgile/psake-tools/master/setup.ps1"  
+    $source = "https://raw.github.com/openAgile/psake-tools/master/setup.ps1"
     Invoke-WebRequest -Uri $source -OutFile setup.ps1
 }
 
@@ -53,7 +53,7 @@ There are two major sets of tasks that you can use as parameter, local and jenki
 
 ###The complete list of tasks:
 
-build, clean, setAssemblyInfo, publish, restoreAndUpdatePackages, generatePackage, pushMyGet, pushNuGet, installNunitRunners, runNunitTests, setUpNuget, runPreExtensions, runPostExtensions, publishDocumentation, publishToAppCatalog, zipFiles.
+build, clean, setAssemblyInfo, publish, restoreAndUpdatePackages, generatePackage, pushMyGet, pushNuGet, installNunitRunners, runNunitTests, runNspecTests, runMsTests, RunMsIntegrationTests, setUpNuget, runPreExtensions, runPostExtensions, publishDocumentation, publishToAppCatalog, zipFiles.
 
 
 ##Extensions

@@ -232,32 +232,39 @@ function Invoke-Extensions {
 	}
 }
 
-function Get-Tests {
+function Get-UnitTests {
 	param([string]$path)
 	,@(ls -r *.Tests.dll -Path $path |
 	? { $_.FullName -like "*\bin\$($config.configuration)\*.Tests.dll" })
 }
 
+function Get-IntegrationTests {
+	param([string]$path)
+	,@(ls -r *.IntegrationTests.dll -Path $path |
+	? { $_.FullName -like "*\bin\$($config.configuration)\*.IntegrationTests.dll" })
+}
+
 function Invoke-NunitTests {
 	param([string]$path)
-	$target = Get-Tests $path
+	$target = Get-UnitTests $path
 	$bin = Get-NewestFilePath "$path\packages" "nunit-console-x86.exe"
 	Invoke-TestsRunner $bin $target
 }
 
 function Invoke-NspecTests {
 	param([string]$path)
-	$target = Get-Tests $path
+	$target = Get-UnitTests $path
 	$bin = Get-NewestFilePath "$path\packages" "NSpecRunner.exe"
 	Invoke-TestsRunner $bin $target
 }
 
 function Invoke-MsTests {
-	param([string]$path)
-	$target = Get-Tests $path
-	#$bin = Get-NewestFilePath (Get-ChildItem -path $env:systemdrive\ -filter "mstest.exe" -erroraction silentlycontinue -recurse)[0].FullName
-	$bin = "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\MSTest.exe"
-	$target | % { iex "& '$bin' /testcontainer:'$($_.FullName)' /resultsfile:'$path\$($_.Name -replace '.Tests.dll', '.TestResults.trx')'" }
+	param([Parameter(Mandatory=$false,ValueFromPipeline=$true)]$target)
+	process{
+		#$bin = Get-NewestFilePath (Get-ChildItem -path $env:systemdrive\ -filter "mstest.exe" -erroraction silentlycontinue -recurse)[0].FullName
+		$bin = "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\MSTest.exe"
+		iex "& '$bin' /testcontainer:'$($target.FullName)' /resultsfile:'$path\$($target.Name -replace '.Tests.dll', '.TestResults.trx')'"
+	}
 }
 
 function Invoke-TestsRunner {

@@ -1,10 +1,10 @@
 ﻿function Get-ConfigSample {
-	'{	
+	'{
 		"solution": "MySolution.sln",
 		"projectToPublish": "MyPublishProject.csproj",
 		"projectToPackage": "MyPackageProject.csproj,MyPackageProject2.csproj",
 		"configuration": "Release",
-    	"platform": "Any CPU",    
+    	"platform": "Any CPU",
     	"major": "2",
     	"minor": "1",
 		"nugetSources": "http://packages.nuget.org/api/v2/;http://packages.otherSource.org"
@@ -13,8 +13,8 @@
 
 function Get-AssemblySample {
 "[assembly: AssemblyVersion(`"0.0.123.456`")]" +
-"[assembly: AssemblyFileVersion(`"0.0.789.123`")]" + 
-"[assembly: AssemblyCompany(`"Company, Inc.`")]" + 
+"[assembly: AssemblyFileVersion(`"0.0.789.123`")]" +
+"[assembly: AssemblyCompany(`"Company, Inc.`")]" +
 "[assembly: AssemblyDescription(`"SomeAssembly`")]"
 }
 
@@ -22,14 +22,14 @@ function Get-AssemblySampleWithNewVersion {
 param([string]$v)
 "[assembly: AssemblyVersion(`"$v`")]" +
 "[assembly: AssemblyFileVersion(`"$v`")]" +
-"[assembly: AssemblyCompany(`"Company, Inc.`")]" + 
+"[assembly: AssemblyCompany(`"Company, Inc.`")]" +
 "[assembly: AssemblyDescription(`"SomeAssembly`")]"
 }
 
 function Setup-Object {
 	Setup -File 'build.properties.json' (Get-ConfigSample)
 	Get-ConfigObjectFromFile "$TestDrive\build.properties.json"
-} 
+}
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
@@ -56,18 +56,18 @@ Describe "Get-ConfigObjectFromFile" {
 Describe "Get-NewestFilePath" {
 	$folder = 'packages\Some.Library.Name'
 	$library = 'Some.Library.Name.dll'
-	
+
 	$libraries =
 		"$folder.0.0.0.121\$library",
 		"$folder.0.0.2.1\$library",
 		"$folder.3.0.0.50\$library"
-	
-	$libraries | % { Setup -File $_ } 
-	
+
+	$libraries | % { Setup -File $_ }
+
 	Context "when calling it with a path that cointains those libraries" {
 		$path = Get-NewestFilePath $TestDrive $library
 		 It "should get the newest one" {
-		 	$path | Should Be "$TestDrive\$folder.3.0.0.50\$library"	
+		 	$path | Should Be "$TestDrive\$folder.3.0.0.50\$library"
 		 }
 	}
 }
@@ -75,7 +75,7 @@ Describe "Get-NewestFilePath" {
 Describe "New-NugetDirectory" {
 	Context "when calling it with a path parameter" {
 		New-NugetDirectory $TestDrive > $null
-		 It "should create the nuget folder in that location" {		 	
+		 It "should create the nuget folder in that location" {
 		 	Test-Path "$TestDrive\.nuget" | Should be $true
 		 }
 	}
@@ -84,44 +84,44 @@ Describe "New-NugetDirectory" {
 Describe "Get-NugetBinary" {
 	Context "when calling it with a path parameter" {
 		mock Invoke-WebRequest { Setup -File ("\.nuget\nuget.exe") } -Verifiable
-		Get-NugetBinary $TestDrive		
-		
+		Get-NugetBinary $TestDrive
+
 		It "should call Invoke-WebRequest" {
 			Assert-VerifiableMocks
 		}
-		It "should put the nuget binary in that location" {		 	
+		It "should put the nuget binary in that location" {
 		 	Test-Path "$TestDrive\.nuget" | Should be $true
 		 }
 	}
 }
 
-Describe "Get-Version" {	
+Describe "Get-Version" {
 	$config = Setup-Object
-	
+
 	Context "when calling it without the build number and a one digit day of year" {
 		$date = Get-Date -Year 2014 -Month 1 -Day 1 -Hour 1 -Minute 23
 		$result = Get-Version $date
 		It "should return version with the proper length" {
-			$result | Should be "2.1.14001.0123"	
+			$result | Should be "2.1.14001.0123"
 		}
 	}
-	
+
 	Context "when calling it without the build number and a two digits day of year" {
 		$date = Get-Date -Year 2014 -Month 1 -Day 20 -Hour 1 -Minute 23
 		$result = Get-Version $date
 		It "should return version with the proper length" {
-			$result | Should be "2.1.14020.0123"	
+			$result | Should be "2.1.14020.0123"
 		}
 	}
-	
+
 	Context "when calling it without the build number and a three digits day of year" {
 		$date = Get-Date -Year 2014 -Month 4 -Day 10 -Hour 1 -Minute 23
 		$result = Get-Version $date $null
 		It "should return version with the proper length" {
-			$result | Should be "2.1.14100.0123"	
+			$result | Should be "2.1.14100.0123"
 		}
 	}
-	
+
 	Context "when calling it with the build number" {
 		$date = Get-Date -Year 2014 -Month 1 -Day 1 -Hour 1 -Minute 23
 		$result = Get-Version $date "2900"
@@ -139,13 +139,13 @@ Describe "Get-Assemblies" {
 		"a\b-c\d\AssemblyInfo.cs",
 		"a\b-c\d\efg\AssemblyInfo.fs",
         "a\b-c\d\efg\AssemblyInfo.zs",
-        "AssemblyInfo" | 
+        "AssemblyInfo" |
 		% { Setup -File $_ (Get-AssemblySample) }
-		
+
 		$assemblies = Get-Assemblies $TestDrive
-		
+
 		It "should get all those files" {
-			$assemblies.Length | Should Be 4 
+			$assemblies.Length | Should Be 4
 		 }
 	}
 }
@@ -161,10 +161,10 @@ Describe "Update-Assemblies" {
 
 		$files | % { Setup -File $_ (Get-AssemblySample) }
 		Get-Assemblies $TestDrive | Update-Assemblies > $null
-		
+
 		It "should update the version values for those files" {
 			$files |
-			% { (cat $TestDrive\$_) | 
+			% { (cat $TestDrive\$_) |
 			Should Be (Get-AssemblySampleWithNewVersion $version) }
 		 }
 	}
@@ -249,17 +249,17 @@ using System.Runtime.InteropServices;
 }
 
 Describe "Get-EnvironmentVariableOrDefault" {
-	
+
 	Context "when calling it with a variable that doesn't exist" {
 		$result = Get-EnvironmentVariableOrDefault "ThereShoulNotBeAVariableWithThisName" "defaultValue"
-		 It "should return the default value " {		 	
+		 It "should return the default value " {
 		 	 $result | Should be "defaultValue"
-		 }		 
+		 }
 	}
-	
+
 	Context "when calling it with a variable that does exist" {
-		$result = Get-EnvironmentVariableOrDefault "Path" "defaultValue"		
-		 It "should not return be the default value" {		 	
+		$result = Get-EnvironmentVariableOrDefault "Path" "defaultValue"
+		 It "should not return be the default value" {
 		 	 $result | Should not be "defaultValue"
 		 }
 	}
@@ -272,21 +272,21 @@ Describe "Get-PreExtensions" {
 		"pre.010.aaa.ps1",
 		"pre.100.mmm.ps1",
 		"pre.101.foo.script.ps1",
-		"pre.script.foo.mmm.ps1",		
+		"pre.script.foo.mmm.ps1",
 		"some-ex.001.script.zzz.ps1"
-		
+
 	    $files | % { Setup -File $_ '' }
-		
-        $result = Get-PreExtensions $TestDrive        
+
+        $result = Get-PreExtensions $TestDrive
 		It "should only return files that match the pattern pre.number.*.ps1" {
-			$result.Length | Should Be 4			
+			$result.Length | Should Be 4
 		}
-		
+
 		It "should return scripts paths in the proper order" {
 			$result[0].Name | Should Be "pre.001.zzz.ps1"
 			$result[1].Name | Should Be "pre.010.aaa.ps1"
 			$result[2].Name | Should Be "pre.100.mmm.ps1"
-            $result[3].Name | Should Be "pre.101.foo.script.ps1"            
+            $result[3].Name | Should Be "pre.101.foo.script.ps1"
 		}
 	}
 }
@@ -305,14 +305,14 @@ Describe "Get-PostExtensions" {
 		"build-ex.script.foo.mmm.ps1",
 		"build-ex.script.foo.mmm.ps11",
 		"build-ex.script.foo.mmm.ps",
-		"some-ex.001.script.zzz.ps1"		
-		
+		"some-ex.001.script.zzz.ps1"
+
 	$files | % { Setup -File $_ '' }
 		$result = Get-PostExtensions $TestDrive
 		It "should only return files that match the pattern post.number.*.ps1" {
-			$result.Length | Should Be 4			
+			$result.Length | Should Be 4
 		}
-		
+
 		It "should return scripts paths in the proper order" {
 			$result[0].Name | Should Be "post.001.zzz.ps1"
 			$result[1].Name | Should Be "post.010.aaa.ps1"
@@ -324,34 +324,34 @@ Describe "Get-PostExtensions" {
 
 Describe "Invoke-Extensions" {
 	Context "when calling it with three extensions" {
-		$files = 
+		$files =
 		"pre.001.script.zzz.ps1",
 		"pre.010.script.aaa.ps1",
 		"pre.100.script.mmm.ps1"
-	
+
 		0,1,2 | % { Setup -File $files[$_] "New-Item $TestDrive -name $_.tmp -type file" }
 		(Get-PreExtensions $TestDrive) | Invoke-Extensions > $null
-		
+
 		It "should run the three scripts that create a temporal file each one" {
-			0,1,2 | % { Test-Path "$TestDrive\$_.tmp" | Should Be $true }			
+			0,1,2 | % { Test-Path "$TestDrive\$_.tmp" | Should Be $true }
 		}
 	}
-	
+
 	Context "when calling it with an empty array" {
 		@() | Invoke-Extensions > $null
 		It "shouldn't throw an exception" { }
 	}
-	
+
 	Context "when calling it with null" {
 		$null | Invoke-Extensions > $null
 		It "shouldn't throw an exception" { }
 	}
 }
 
-Describe "Get-Tests" {
+Describe "Get-UnitTests" {
 	Context "when calling it with a path that has test dlls" {
 		$config = Setup-Object
-		
+
 		"foo\bin\release\project.Tests.dll",
 		"foo\bin\debug\project.Tests.dll",
 		"foo\obj\release\project.Tests.dll",
@@ -359,11 +359,11 @@ Describe "Get-Tests" {
 		"release\project.Tests.dll",
 		"project.Tests.dll",
 		".Tests.dll",
-		"Tests.dll" | 
+		"Tests.dll" |
 		% { Setup -File $_ '' }
-		
+
 		It "should return the dlls that are at the proper folder for the current build configuration (debug, release)" {
-			 (Get-Tests $TestDrive).Length | Should Be 1
+			 (Get-UnitTests $TestDrive).Length | Should Be 1
 		}
 	}
 }
@@ -371,7 +371,7 @@ Describe "Get-Tests" {
 Describe "Get-BuildCommand" {
 	Context "when calling it with the configuration initialized" {
 		$config = Setup-Object
-		It "should return the msbuild command with the values from the configuration file" {		
+		It "should return the msbuild command with the values from the configuration file" {
 			Get-BuildCommand |
 			Should Be 'msbuild MySolution.sln -t:Build -p:Configuration=Release "-p:Platform=Any CPU"'
 		}
@@ -381,7 +381,7 @@ Describe "Get-BuildCommand" {
 Describe "Get-CleanCommand" {
 	Context "when calling it with the configuration initialized" {
 		$config = Setup-Object
-		It "should return the msbuild command with the values from the configuration file" {		
+		It "should return the msbuild command with the values from the configuration file" {
 			Get-CleanCommand |
 			Should Be 'msbuild MySolution.sln -t:Clean -p:Configuration=Release "-p:Platform=Any CPU"'
 		}
@@ -391,7 +391,7 @@ Describe "Get-CleanCommand" {
 Describe "Get-PublishCommand" {
 	Context "when calling it with the configuration initialized" {
 		$config = Setup-Object
-		It "should return the msbuild command with the values from the configuration file" {		
+		It "should return the msbuild command with the values from the configuration file" {
 			Get-PublishCommand |
 			Should Be 'msbuild MyPublishProject.csproj -t:Publish -p:Configuration=Release "-p:Platform=AnyCPU"'
 		}
@@ -401,7 +401,7 @@ Describe "Get-PublishCommand" {
 Describe "Get-RestorePackagesCommand" {
 	Context "when calling it with the configuration initialized" {
 		$config = Setup-Object
-		It "should return the expected command with the values from the configuration file" {		
+		It "should return the expected command with the values from the configuration file" {
 			Get-RestorePackagesCommand |
 			Should Be '.\\.nuget\nuget.exe restore MySolution.sln -Source http://packages.nuget.org/api/v2/`;http://packages.otherSource.org'
 		}
@@ -411,19 +411,19 @@ Describe "Get-RestorePackagesCommand" {
 Describe "Get-UpdatePackagesCommand" {
 	Context "when calling it with the configuration initialized" {
 		$config = Setup-Object
-		It "should return the expected command with the values from the configuration file" {		
+		It "should return the expected command with the values from the configuration file" {
 			Get-UpdatePackagesCommand |
 			Should Be '.\\.nuget\nuget.exe update MySolution.sln -Source http://packages.nuget.org/api/v2/`;http://packages.otherSource.org -NonInteractive -FileConflictAction Overwrite'
 		}
 	}
 }
 
-Describe "Get-GeneratePackageCommand" {	
+Describe "Get-GeneratePackageCommand" {
 	Context "when calling it with the project to package" {
 		$config = Setup-Object
 		$version = "1.2.3.4"
-		It "should return the expected command with the values from the configuration file" {		
-			Get-GeneratePackageCommand "MyPackageProject.csproj" | 
+		It "should return the expected command with the values from the configuration file" {
+			Get-GeneratePackageCommand "MyPackageProject.csproj" |
 			Should Be '.\\.nuget\nuget.exe pack MyPackageProject.csproj -Verbosity Detailed -Version 1.2.3.4 -prop "Configuration=Release"'
 		}
 	}
@@ -434,7 +434,7 @@ Describe "Get-PushMyGetCommand" {
 		$apiKey = "someKey"
 		$repoUrl = "http://someUrl.org"
 		It "should return the expected command" {
-			(Get-PushMyGetCommand $apiKey $repoUrl) | 
+			(Get-PushMyGetCommand $apiKey $repoUrl) |
 			Should Be '.\\.nuget\nuget.exe push *.nupkg someKey -Source http://someUrl.org'
 		}
 	}
@@ -444,13 +444,13 @@ Describe "Get-PushNuGetCommand" {
 	Context "when calling it with the api key" {
 		$apiKey = "someKey"
 		It "should return the expected command" {
-			(Get-PushNuGetCommand $apiKey) | 
+			(Get-PushNuGetCommand $apiKey) |
 			Should Be '.\\.nuget\nuget.exe push *.nupkg someKey'
 		}
 	}
 }
 
-Describe "Get-InstallNRunnersCommand" {	
+Describe "Get-InstallNRunnersCommand" {
 	Context "when calling it" {
 		It "should return the expected command" {
 			Get-InstallNRunnersCommand |
@@ -459,7 +459,7 @@ Describe "Get-InstallNRunnersCommand" {
 	}
 }
 
-Describe "Get-InstallNSpecCommand" {	
+Describe "Get-InstallNSpecCommand" {
 	Context "when calling it" {
 		It "should return the expected command" {
 			Get-InstallNSpecCommand |
@@ -470,11 +470,11 @@ Describe "Get-InstallNSpecCommand" {
 
 Describe "Compress-Folder" {
 	Context "when calling it with a path with 3 files" {
-        $files = "one.dll","two.txt", "three.sln"		
+        $files = "one.dll","two.txt", "three.sln"
 	    $files | % { Setup -File $_ '' }
-        Compress-Folder "$TestDrive" "$TestDrive\test.zip"        
-        
-		It "compresses the 3 files into a zip specified as a parameter" {            
+        Compress-Folder "$TestDrive" "$TestDrive\test.zip"
+
+		It "compresses the 3 files into a zip specified as a parameter" {
             Test-Path "$TestDrive\test.zip" | Should be $true
 		}
 	}

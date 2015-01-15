@@ -76,7 +76,11 @@ task runNspecTests -depends installNSpecRunners {
 }
 
 task runMsTests {
-    exec{ Invoke-MsTests $baseDirectory }
+    exec{ Get-UnitTests $baseDirectory | Invoke-MsTests  }
+}
+
+task runMsIntegrationTests {
+    exec{ Get-IntegrationTests $baseDirectory | Invoke-MsTests  }
 }
 
 task setUpNuget {
@@ -109,10 +113,10 @@ task zipBaseFolder {
     Compress-Folder (pwd).Path "$baseFolder_$version.zip"
 }
 
-task zipProjects {    
+task zipProjects {
     Get-ProjectsToZip  | % {
-        $projectPath = (pwd).Path + "\$_\bin\$($config.configuration)" 
-        Compress-Folder $projectPath "$_.$version.zip" 
+        $projectPath = (pwd).Path + "\$_\bin\$($config.configuration)"
+        Compress-Folder $projectPath "$_.$version.zip"
     }
 }
 
