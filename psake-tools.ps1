@@ -76,11 +76,11 @@ task runNspecTests -depends installNSpecRunners {
 }
 
 task runMsTests {
-    exec{ Get-UnitTests $baseDirectory | Invoke-MsTests  }
+    exec{ Get-UnitTests $baseDirectory | Invoke-MsTests  $baseDirectory }
 }
 
 task runMsIntegrationTests {
-    exec{ Get-IntegrationTests $baseDirectory | Invoke-MsTests  }
+    exec{ Get-IntegrationTests $baseDirectory | Invoke-MsTests $baseDirectory }
 }
 
 task setUpNuget {
