@@ -565,3 +565,38 @@ function Stringify {
 	}
 	return $result
 }
+
+function Clean-ConfigFile {
+	$path = Resolve-Path ".\VersionOne.ServiceHost.exe.config"
+	$xml = [xml](Get-Content $path)
+
+	## GENERAL SETTINGS
+	$xml.configuration.Services.LogService.Console.LogLevel = "Info"
+	$xml.configuration.Services.LogService.File.LogLevel = "Info"
+	$xml.configuration.Services.ProfileFlushTimer.Interval = "30000"
+
+	$node = $xml.configuration.Services.ChildNodes | where { $_.Name -Like "*ServiceTimer" }
+	if ($node -ne $null) {
+	    $node.Interval = "60000"
+	}
+
+	## VERSIONONE SYSTEM
+	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http(s)://{server}/{instance}"
+	$xml.configuration.Services.WorkitemWriterService.Settings.Username = "{username}"
+	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "{password}"
+	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri = "http(s)://{proxyhost}"
+	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.UserName = "{username}"
+	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Password = "{password}"
+
+	## TARGET SYSTEM
+	$serviceName = $config.targetSystemConfig.PSObject.Properties | select -First 1 Name
+	$serviceNode = $xml.configuration.Services.ChildNodes | where { $_.Name -Like $serviceName.Name }
+	if ($serviceNode -ne $null) {
+
+	    $config.targetSystemConfig.$($serviceNode.Name).PSObject.Properties | % {
+	        $serviceNode.$($_.Name)=$_.Value
+	    }
+	}
+
+	$xml.Save($path);
+}

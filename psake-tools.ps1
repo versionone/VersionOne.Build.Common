@@ -135,3 +135,7 @@ task extract {
         Extract-File $config.extract.name
     }
 }
+
+task cleanConfigFile {
+    Clean-ConfigFile
+}
