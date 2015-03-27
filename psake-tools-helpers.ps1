@@ -567,7 +567,7 @@ function Stringify {
 }
 
 function Clean-ConfigFile {
-	$path = Resolve-Path ".\VersionOne.ServiceHost.exe.config"
+	$path = Resolve-Path ".\bin\VersionOne.ServiceHost.exe.config"
 	$xml = [xml](Get-Content $path)
 
 	## GENERAL SETTINGS
