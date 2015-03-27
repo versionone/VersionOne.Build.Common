@@ -587,6 +587,7 @@ function Clean-ConfigFile {
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri = "http(s)://{proxyhost}"
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.UserName = "{username}"
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Password = "{password}"
+    $xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Domain = "{domain}"
 
 	## TARGET SYSTEM
 	$serviceName = $config.targetSystemConfig.PSObject.Properties | select -First 1 Name
