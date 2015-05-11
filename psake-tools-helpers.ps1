@@ -582,13 +582,22 @@ function Clean-ConfigFile {
 
 	## VERSIONONE SYSTEM
 	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http(s)://{server}/{instance}"
-	$accessTokenNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.AccessToken"
-	if ($accessTokenNode -ne $null) { $accessTokenNode = "{accessToken}" } 
+	$accessTokenNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.AccessToken"
+	if ($accessTokenNode -ne $null) { 
+		$accessTokenNode.InnerText = "{accessToken}" 
+	} 
 	$xml.configuration.Services.WorkitemWriterService.Settings.Username = "{username}"
 	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "{password}"
 	$uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri" 
-	if ($uriNode -eq $null) { $uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Url" }
-	if ($uriNode -ne $null) { $uriNode = "http(s)://{proxyhost}" } 
+	if ($uriNode -ne $null) { 
+		$uriNode.InnerText = "http(s)://{proxyhost}" 
+	} 
+	else { 
+		$urlNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Url" 
+		if ($urlNode -ne $null) { 
+			$urlNode.InnerText = "http(s)://{proxyhost}" 
+		}
+	} 
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.UserName = "{username}"
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Password = "{password}"
     $xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Domain = "{domain}"
