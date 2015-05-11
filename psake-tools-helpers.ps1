@@ -584,7 +584,9 @@ function Clean-ConfigFile {
 	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http(s)://{server}/{instance}"
 	$xml.configuration.Services.WorkitemWriterService.Settings.Username = "{username}"
 	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "{password}"
-	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri = "http(s)://{proxyhost}"
+	$uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri" 
+	if ($uriNode -eq $null) { $uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Url" }
+	if ($uriNode -ne $null) { $uriNode = "http(s)://{proxyhost}" } 
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.UserName = "{username}"
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Password = "{password}"
     $xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Domain = "{domain}"
@@ -600,4 +602,19 @@ function Clean-ConfigFile {
 	}
 
 	$xml.Save($path);
+}
+
+function Get-XmlNode([ xml ]$XmlDocument, [string]$NodePath, [string]$NamespaceURI = "", [string]$NodeSeparatorCharacter = '.')
+{
+    # If a Namespace URI was not given, use the Xml document's default namespace.
+    if ([string]::IsNullOrEmpty($NamespaceURI)) { $NamespaceURI = $XmlDocument.DocumentElement.NamespaceURI }   
+     
+    # In order for SelectSingleNode() to actually work, we need to use the fully qualified node path along with an Xml Namespace Manager, so set them up.
+    $xmlNsManager = New-Object System.Xml.XmlNamespaceManager($XmlDocument.NameTable)
+    $xmlNsManager.AddNamespace("ns", $NamespaceURI)
+    $fullyQualifiedNodePath = "/ns:$($NodePath.Replace($($NodeSeparatorCharacter), '/ns:'))"
+     
+    # Try and get the node, then return it. Returns $null if the node was not found.
+    $node = $XmlDocument.SelectSingleNode($fullyQualifiedNodePath, $xmlNsManager)
+    return $node
 }
