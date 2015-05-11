@@ -582,6 +582,8 @@ function Clean-ConfigFile {
 
 	## VERSIONONE SYSTEM
 	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http(s)://{server}/{instance}"
+	$accessTokenNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.AccessToken"
+	if ($accessTokenNode -ne $null) { $accessTokenNode = "{accessToken}" } 
 	$xml.configuration.Services.WorkitemWriterService.Settings.Username = "{username}"
 	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "{password}"
 	$uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri" 
