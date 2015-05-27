@@ -606,9 +606,18 @@ function Clean-ConfigFile {
 	$serviceName = $config.targetSystemConfig.PSObject.Properties | select -First 1 Name
 	$serviceNode = $xml.configuration.Services.ChildNodes | where { $_.Name -Like $serviceName.Name }
 	if ($serviceNode -ne $null) {
-
 	    $config.targetSystemConfig.$($serviceNode.Name).PSObject.Properties | % {
-	        $serviceNode.$($_.Name)=$_.Value
+	        $splittedValue = $_.Value.Split('=')
+			if ($splittedValue.Count -gt 1) {
+				$serviceNode.$($_.Name).$($splittedValue[0])=$splittedValue[1]
+			} else {
+				if ([string]::IsNullOrEmpty($_.Value) -and $serviceNode.$($_.Name).ChildNodes.Count -gt 0) {
+					$currentConfig = $serviceNode.$($_.Name)
+					$currentConfig.Mapping | % { $currentConfig.RemoveChild($_) }
+				} else {
+					$serviceNode.$($_.Name)=$_.Value
+				}
+			}
 	    }
 	}
 
