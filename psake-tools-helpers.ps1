@@ -581,7 +581,7 @@ function Clean-ConfigFile {
 	}
 
 	## VERSIONONE SYSTEM
-	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http(s)://server/instance"
+	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http://server/instance"
 	$accessTokenNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.AccessToken"
 	if ($accessTokenNode -ne $null) { 
 		$accessTokenNode.InnerText = "accessToken" 
@@ -590,12 +590,12 @@ function Clean-ConfigFile {
 	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "password"
 	$uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri" 
 	if ($uriNode -ne $null) { 
-		$uriNode.InnerText = "http(s)://proxyhost" 
+		$uriNode.InnerText = "http://proxyhost" 
 	} 
 	else { 
 		$urlNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Url" 
 		if ($urlNode -ne $null) { 
-			$urlNode.InnerText = "http(s)://proxyhost" 
+			$urlNode.InnerText = "http://proxyhost" 
 		}
 	} 
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.UserName = "username"
