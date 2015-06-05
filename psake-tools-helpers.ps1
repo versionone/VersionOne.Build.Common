@@ -581,38 +581,39 @@ function Clean-ConfigFile {
 	}
 
 	## VERSIONONE SYSTEM
-	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http(s)://{server}/{instance}"
+	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http(s)://server/instance"
 	$accessTokenNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.AccessToken"
 	if ($accessTokenNode -ne $null) { 
-		$accessTokenNode.InnerText = "{accessToken}" 
+		$accessTokenNode.InnerText = "accessToken" 
 	} 
-	$xml.configuration.Services.WorkitemWriterService.Settings.Username = "{username}"
-	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "{password}"
+	$xml.configuration.Services.WorkitemWriterService.Settings.Username = "username"
+	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "password"
 	$uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri" 
 	if ($uriNode -ne $null) { 
-		$uriNode.InnerText = "http(s)://{proxyhost}" 
+		$uriNode.InnerText = "http(s)://proxyhost" 
 	} 
 	else { 
 		$urlNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Url" 
 		if ($urlNode -ne $null) { 
-			$urlNode.InnerText = "http(s)://{proxyhost}" 
+			$urlNode.InnerText = "http(s)://proxyhost" 
 		}
 	} 
-	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.UserName = "{username}"
-	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Password = "{password}"
-    $xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Domain = "{domain}"
+	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.UserName = "username"
+	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Password = "password"
+    $xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Domain = "domain"
 
 	## TARGET SYSTEM
 	$serviceName = $config.targetSystemConfig.PSObject.Properties | select -First 1 Name
 	$serviceNode = $xml.configuration.Services.ChildNodes | where { $_.Name -Like $serviceName.Name }
 	if ($serviceNode -ne $null) {
 	    $config.targetSystemConfig.$($serviceNode.Name).PSObject.Properties | % {
-	        $splittedValue = $_.Value.Split('=')
-			if ($splittedValue.Count -gt 1) {
-				$serviceNode.$($_.Name).$($splittedValue[0])=$splittedValue[1]
+			$currentConfig = $serviceNode.$($_.Name)
+	        if ($_.Value.Attributes -ne $null) {
+				$_.Value.Attributes | % {
+					 $_.PSObject.Properties | % { $currentConfig.$($_.Name)=$_.Value }
+				}
 			} else {
 				if ([string]::IsNullOrEmpty($_.Value) -and $serviceNode.$($_.Name).ChildNodes.Count -gt 0) {
-					$currentConfig = $serviceNode.$($_.Name)
 					$currentConfig.Mapping | % { $currentConfig.RemoveChild($_) }
 				} else {
 					$serviceNode.$($_.Name)=$_.Value
