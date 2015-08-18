@@ -1,4 +1,4 @@
-﻿
+
 function Clean-Characters {
 	param(
 		[Parameter(Mandatory=$true, ValueFromPipeline=$true)]
@@ -188,24 +188,28 @@ using System.Runtime.InteropServices;
 }
 
 function Get-Version {
-	param([DateTime]$currentUtcDate, [string]$buildNumber)
-	if(($config.version -ne $null) -and ($config.version -match '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')){
-		$version = $config.version
-	}
-	else {
-		$year = $currentUtcDate.ToString("yy")
-		if( -not $buildNumber) { $buildNumber = $currentUtcDate.ToString("HHmm") }
+    param([DateTime]$currentUtcDate, [string]$buildNumber)
+    if(($config.version -ne $null) -and ($config.version -match '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')){
+        $version = $config.version
+    }
+    else {
+        $patch = $config.patch
+        if (-not $patch) {
+            $year = $currentUtcDate.ToString("yy")
+            if( -not $buildNumber) { $buildNumber = $currentUtcDate.ToString("HHmm") }
 
-		$dayOfyear = $currentUtcDate.DayOfYear
-		if(([string]$dayOfyear).Length -eq 1){
-			$dayOfyear=  "00" + $dayOfyear
-		}
-		elseif(([string]$dayOfyear).Length -eq 2){
-			$dayOfyear = "0" + $dayOfyear
-		}
-		$version = "$($config.major).$($config.minor).$year$dayOfyear.$buildNumber"
-	}
-	return $version
+            $dayOfyear = $currentUtcDate.DayOfYear
+            if(([string]$dayOfyear).Length -eq 1) {
+                $dayOfyear=  "00" + $dayOfyear
+            }
+            elseif(([string]$dayOfyear).Length -eq 2) {
+                $dayOfyear = "0" + $dayOfyear
+            }
+            $patch = "$year$dayOfyear"
+        }
+        $version = "$($config.major).$($config.minor).$patch.$buildNumber"
+    }
+    return $version
 }
 
 function Get-PreExtensions {
