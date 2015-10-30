@@ -269,7 +269,14 @@ function Invoke-MsTests {
 	process{
 		#$bin = Get-NewestFilePath (Get-ChildItem -path $env:systemdrive\ -filter "mstest.exe" -erroraction silentlycontinue -recurse)[0].FullName
 		$bin = "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\MSTest.exe"
-		$target | % { iex "& '$bin' /testcontainer:'$($_.FullName)' /resultsfile:'$resultPath\$($_.Name -replace '.Tests.dll', '.TestResults.trx')'" }
+		$target | % {
+			iex "& '$bin' /testcontainer:'$($_.FullName)' /resultsfile:'$resultPath\$($_.Name -replace '.Tests.dll', '.TestResults.trx')'"
+
+			if($lastExitCode -ne 0){
+				throw 'Invoke-MsTests failed.'
+			}
+		}
+
 	}
 }
 
@@ -587,21 +594,21 @@ function Clean-ConfigFile {
 	## VERSIONONE SYSTEM
 	$xml.configuration.Services.WorkitemWriterService.Settings.ApplicationUrl = "http://server/instance"
 	$accessTokenNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.AccessToken"
-	if ($accessTokenNode -ne $null) { 
-		$accessTokenNode.InnerText = "accessToken" 
-	} 
+	if ($accessTokenNode -ne $null) {
+		$accessTokenNode.InnerText = "accessToken"
+	}
 	$xml.configuration.Services.WorkitemWriterService.Settings.Username = "username"
 	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "password"
-	$uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri" 
-	if ($uriNode -ne $null) { 
-		$uriNode.InnerText = "http://proxyhost" 
-	} 
-	else { 
-		$urlNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Url" 
-		if ($urlNode -ne $null) { 
-			$urlNode.InnerText = "http://proxyhost" 
+	$uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri"
+	if ($uriNode -ne $null) {
+		$uriNode.InnerText = "http://proxyhost"
+	}
+	else {
+		$urlNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Url"
+		if ($urlNode -ne $null) {
+			$urlNode.InnerText = "http://proxyhost"
 		}
-	} 
+	}
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.UserName = "username"
 	$xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Password = "password"
     $xml.configuration.Services.WorkitemWriterService.Settings.ProxySettings.Domain = "domain"
@@ -632,13 +639,13 @@ function Clean-ConfigFile {
 function Get-XmlNode([ xml ]$XmlDocument, [string]$NodePath, [string]$NamespaceURI = "", [string]$NodeSeparatorCharacter = '.')
 {
     # If a Namespace URI was not given, use the Xml document's default namespace.
-    if ([string]::IsNullOrEmpty($NamespaceURI)) { $NamespaceURI = $XmlDocument.DocumentElement.NamespaceURI }   
-     
+    if ([string]::IsNullOrEmpty($NamespaceURI)) { $NamespaceURI = $XmlDocument.DocumentElement.NamespaceURI }
+
     # In order for SelectSingleNode() to actually work, we need to use the fully qualified node path along with an Xml Namespace Manager, so set them up.
     $xmlNsManager = New-Object System.Xml.XmlNamespaceManager($XmlDocument.NameTable)
     $xmlNsManager.AddNamespace("ns", $NamespaceURI)
     $fullyQualifiedNodePath = "/ns:$($NodePath.Replace($($NodeSeparatorCharacter), '/ns:'))"
-     
+
     # Try and get the node, then return it. Returns $null if the node was not found.
     $node = $XmlDocument.SelectSingleNode($fullyQualifiedNodePath, $xmlNsManager)
     return $node
