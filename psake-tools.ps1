@@ -11,8 +11,8 @@ properties {
 
 #groups of tasks
 task default -depends local
-task local -depends restoreAndUpdatePackages,build,runNunitTests
-task jenkins -depends runPreExtensions,restoreAndUpdatePackages,build,runNunitTests,pushMyGet,runPostExtensions
+task local -depends setProperties,restoreAndUpdatePackages,build,runNunitTests
+task jenkins -depends setProperties,runPreExtensions,restoreAndUpdatePackages,build,runNunitTests,pushMyGet,runPostExtensions
 
 
 #tasks
@@ -31,6 +31,13 @@ task clean {
 
 task publish {
 	exec { iex (Get-PublishCommand) }
+}
+
+task setProperties {
+	if ($config.framework) {
+		Framework $config.framework
+		Write-Host "Set Framework to $($config.framework)"
+	}
 }
 
 task restoreAndUpdatePackages -depends restorePackages,updatePackages {
