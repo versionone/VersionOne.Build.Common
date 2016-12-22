@@ -597,8 +597,12 @@ function Clean-ConfigFile {
 	if ($accessTokenNode -ne $null) {
 		$accessTokenNode.InnerText = "accessToken"
 	}
-	$xml.configuration.Services.WorkitemWriterService.Settings.Username = "username"
-	$xml.configuration.Services.WorkitemWriterService.Settings.Password = "password"
+	if ($xml.configuration.Services.WorkitemWriterService.Settings.Username -ne $null) {
+		$xml.configuration.Services.WorkitemWriterService.Settings.Username = "username"
+	}
+	if ($xml.configuration.Services.WorkitemWriterService.Settings.Password -ne $null) {
+		$xml.configuration.Services.WorkitemWriterService.Settings.Password = "password"
+	}
 	$uriNode = Get-XmlNode -XmlDocument $xml -NodePath "configuration.Services.WorkitemWriterService.Settings.ProxySettings.Uri"
 	if ($uriNode -ne $null) {
 		$uriNode.InnerText = "http://proxyhost"
