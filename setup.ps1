@@ -16,12 +16,14 @@ function DownloadNuget(){
 
 function DownloadAndImportModules(){
 	.nuget\nuget.exe install psake -OutputDirectory packages -NoCache
-	.nuget\nuget.exe install VersionOne.Build.Common -Source http://www.myget.org/F/versionone/api/v2/ -OutputDirectory  packages -NoCache
+	.nuget\nuget.exe install psake-tools -Source http://www.myget.org/F/versionone/api/v2/ -OutputDirectory  packages -NoCache
 }
 
-function CopyCommonToRoot(){
-	$commonPath = GetModulePath "VersionOne.Build.Common.ps1"
-	Copy-Item -Path $commonPath -Destination (Get-Location).Path -Force
+function CopyPsakeToolsToRoot(){
+	$toolsPath = GetModulePath "psake-tools.ps1"
+	Copy-Item -Path $toolsPath -Destination (Get-Location).Path -Force
+	$helpersPath = GetModulePath "psake-tools-helpers.ps1"
+	Copy-Item -Path $helpersPath -Destination (Get-Location).Path -Force
 }
 
 function ImportPsake(){
@@ -33,8 +35,8 @@ try{
 	DownloadNuget
 	DownloadAndImportModules
 	ImportPsake
-	CopyCommonToRoot	
-	Invoke-psake VersionOne.Build.Common.ps1 ($tasks.Split(',').Trim())	
+	CopyPsakeToolsToRoot	
+	Invoke-psake psake-tools.ps1 ($tasks.Split(',').Trim())	
 }
 Catch {
 	throw "Build failed."
