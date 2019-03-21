@@ -2,12 +2,13 @@ psake-tools
 =======================
 
 Reusable tasks for psake-based built scripts (maybe add to https://github.com/psake/psake-contrib?)
-##Requirements
+## Requirements
 Powershell 4
 
-##Getting Started
+## Getting Started
 Want to start right away? Create the next two files at the directory you have the solution.sln:
-###build.properties.json:
+
+### build.properties.json:
 ```json
 {
     "solution": "yourSolution.sln",
@@ -19,7 +20,7 @@ Want to start right away? Create the next two files at the directory you have th
 }
 ```
 
-###build.ps1:
+### build.ps1:
 ```
 param(
     [alias("t")]
@@ -43,20 +44,20 @@ Catch {
 
 By running build.ps1 you are all set for a basic local build.
 
-##Tasks parameters
+## Tasks parameters
 If you only want to run some of the tasks, you can specify them by passing their names as parameters in the next way:
 ``.\build.ps1 "restoreAndUpdatePackages,build"``
 keep in mind that some tasks have dependencies. For example; if you call build it will also call clean and setAssemblyInfo.
 
-##Predefined tasks
+## Predefined tasks
 There are two major sets of tasks that you can use as parameter, local and jenkins. Local includes the basic tasks that you probably want in a local build. Jenkins is for CI, it includes tasks that will generate nuget packages and publish them into myget.
 
-###The complete list of tasks:
+### The complete list of tasks:
 
 build, clean, setAssemblyInfo, publish, restoreAndUpdatePackages, generatePackage, pushMyGet, pushNuGet, installNunitRunners, runNunitTests, runNspecTests, runMsTests, RunMsIntegrationTests, setUpNuget, runPreExtensions, runPostExtensions, publishDocumentation, publishToAppCatalog, zipFiles.
 
 
-##Extensions
+## Extensions
 Predefined tasks aren't enough for you? Don't worry, just create your script file with the next name format:
 
 pre.**OrderNumber**.**NameOfYourScript**.ps1
