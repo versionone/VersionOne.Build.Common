@@ -15,8 +15,10 @@ function DownloadNuget(){
 }
 
 function DownloadAndImportModules(){
-	.nuget\nuget.exe install psake -OutputDirectory packages -NoCache
-	.nuget\nuget.exe install psake-tools -Source http://www.myget.org/F/versionone/api/v2/ -OutputDirectory  packages -NoCache
+	#.nuget\nuget.exe install psake -OutputDirectory packages -NoCache
+	#.nuget\nuget.exe install psake-tools -Source http://www.myget.org/F/versionone/api/v2/ -OutputDirectory  packages -NoCache
+	nuget.exe install psake -OutputDirectory packages -NoCache
+	nuget.exe install psake-tools -Source http://www.myget.org/F/versionone/api/v2/ -OutputDirectory  packages -NoCache
 }
 
 function CopyPsakeToolsToRoot(){
