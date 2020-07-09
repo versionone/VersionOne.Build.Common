@@ -12,6 +12,7 @@ function DownloadNuget(){
 	new-item (Get-Location).Path -name .nuget -type directory -force
 	$destination = (Get-Location).Path + '\nuget.exe'	
 	Write-Host "Destination for nuget=" $destination
+	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	Invoke-WebRequest -Uri "http://nuget.org/nuget.exe" -OutFile $destination
 
 }
