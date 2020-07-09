@@ -10,7 +10,7 @@ function GetModulePath([string]$module){
 
 function DownloadNuget(){
 	new-item (Get-Location).Path -name .nuget -type directory -force
-	$destination = (Get-Location).Path + '\.nuget\nuget.exe'	
+	$destination = (Get-Location).Path + '\nuget.exe'	
 	Invoke-WebRequest -Uri "http://nuget.org/nuget.exe" -OutFile $destination
 }
 
