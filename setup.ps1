@@ -32,7 +32,7 @@ function ImportPsake(){
 	$psakePath = GetModulePath "psake.psm1"
 	Import-Module $psakePath
 }
-
+<#
 try{
 	DownloadNuget
 	DownloadAndImportModules
@@ -46,5 +46,43 @@ Catch {
 Finally {
 	if ($psake.build_success -eq $false) {
 		throw "Build failed."    	
+	}
+}
+#>
+try{
+	DownloadNuget
+}
+Catch {
+	throw "DownloadNuget failed."
+}
+try{
+	DownloadAndImportModules
+}
+Catch {
+	throw "DownloadAndImportModules failed."
+}
+try{
+	
+	ImportPsake
+	
+}
+Catch {
+	throw "ImportPsake failed."
+}
+try{
+	CopyPsakeToolsToRoot	
+}
+Catch {
+	throw "CopyPsakeToolsToRoot failed."
+}
+try{
+	Invoke-psake psake-tools.ps1 ($tasks.Split(',').Trim())	
+}
+Catch {
+	throw " Invoke-psake psake-tools.ps with args failed."
+}
+Finally {
+	if ($psake.build_success -eq $false) {
+		throw "shit is still busted"    	
 	}
 }
