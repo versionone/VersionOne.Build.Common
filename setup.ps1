@@ -12,7 +12,7 @@ function DownloadNuget(){
 	new-item (Get-Location).Path -name .nuget -type directory -force
 	$destination = (Get-Location).Path + '\.nuget\nuget.exe'	
 	Write-Host "Destination for nuget=" $destination
-
+#This will insure the latest nuget.exe.  Having a fixed version caused issue when tls changed
 	$latestNuget = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	
@@ -37,23 +37,7 @@ function ImportPsake(){
 	$psakePath = GetModulePath "psake.psm1"
 	Import-Module $psakePath
 }
-<#
-try{
-	DownloadNuget
-	DownloadAndImportModules
-	ImportPsake
-	CopyPsakeToolsToRoot	
-	Invoke-psake psake-tools.ps1 ($tasks.Split(',').Trim())	
-}
-Catch {
-	throw "Build failed."
-}
-Finally {
-	if ($psake.build_success -eq $false) {
-		throw "Build failed."    	
-	}
-}
-#>
+
 try{
 	DownloadNuget
 	Write-Host "DownloadNuget ran"
@@ -91,6 +75,6 @@ Catch {
 }
 Finally {
 	if ($psake.build_success -eq $false) {
-		throw "shit is still busted"    	
+		throw "problem with psak.build_success"    	
 	}
 }
