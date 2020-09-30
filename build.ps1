@@ -25,7 +25,7 @@ function DownloadNuget {
 }
 
 function InstallPsGet {
-	(Invoke-WebRequest "http://psget.net/GetPsGet.ps1") | iex
+	(Invoke-WebRequest "https://raw.githubusercontent.com/psget/psget/master/GetPsGet.ps1") | iex
     Write-Host "Finished InstallPsGet"
 }
 
