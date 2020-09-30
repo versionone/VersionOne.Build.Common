@@ -87,7 +87,7 @@ Describe "Get-NugetBinary" {
 		Get-NugetBinary $TestDrive
 
 		It "should call Invoke-WebRequest" {
-			Assert-VerifiableMocks
+			Assert-VerifiableMock
 		}
 		It "should put the nuget binary in that location" {
 		 	Test-Path "$TestDrive\.nuget" | Should be $true
