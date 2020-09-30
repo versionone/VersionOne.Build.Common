@@ -101,8 +101,8 @@ function Get-PushMygetCommand {
 }
 
 function Get-PushNugetCommand {
-	param([string]$apiKey)
-	".\\.nuget\nuget.exe push *.nupkg $apiKey"
+	param([string]$apiKey,[string]$sourceUrl="https://api.nuget.org/v3/index.json")
+	".\\.nuget\nuget.exe push *.nupkg -ApiKey $apiKey -Source $sourceUrl"
 }
 
 function Get-InstallNRunnersCommand {

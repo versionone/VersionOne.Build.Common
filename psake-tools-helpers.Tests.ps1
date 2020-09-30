@@ -445,7 +445,16 @@ Describe "Get-PushNuGetCommand" {
 		$apiKey = "someKey"
 		It "should return the expected command" {
 			(Get-PushNuGetCommand $apiKey) |
-			Should Be '.\\.nuget\nuget.exe push *.nupkg someKey'
+			Should Be '.\\.nuget\nuget.exe push *.nupkg -ApiKey someKey -Source https://api.nuget.org/v3/index.json'
+		}
+	}
+    
+    Context "when calling it with the api key and source url" {
+		$apiKey = "someKey"
+        $sourceUrl = "sourceUrl"
+		It "should return the expected command" {
+			(Get-PushNuGetCommand $apiKey $sourceUrl) |
+			Should Be '.\\.nuget\nuget.exe push *.nupkg -ApiKey someKey -Source sourceUrl'
 		}
 	}
 }
