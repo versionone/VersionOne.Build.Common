@@ -21,20 +21,24 @@ function DownloadNuget {
     Write-Host "source $source"
     Write-Host "destination $destination"
 	$wc.DownloadFile($source, $destination)	
+    Write-Host "Finished DownloadNuget"
 }
 
 function InstallPsGet {
-	(Invoke-WebRequest "http://psget.net/GetPsGet.ps1") | iex
+	(Invoke-WebRequest "http://psget.net/GetPsGet.ps1" -UseBasicParsing) | iex
+    Write-Host "Finished InstallPsGet"
 }
 
 function InstallPester {
 	Install-Module Pester
 	Import-Module Pester
+    Write-Host "Finished InstallPester"
 }
 
 function RunPester {	
 	 $result = Invoke-Pester -PassThru	 
 	 if($result.FailedCount -ne 0) { throw "Some tests didn't pass."}
+    Write-Host "Finished RunPester"
 }
 
 try{
