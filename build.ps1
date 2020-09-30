@@ -1,4 +1,7 @@
-﻿function BuildAndPublishPackage {
+﻿# force connections to use TLS 1.2 (needed for community site Invoke 
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+function BuildAndPublishPackage {
 	Write-Host "Building..."
 	$version = "1.0.0."
 	$destDir = "build"
@@ -15,6 +18,8 @@ function DownloadNuget {
 	$source = "http://nuget.org/nuget.exe"
 	$destination = (pwd).Path + '\.nuget\nuget.exe'
 	$wc = New-Object System.Net.WebClient
+    Write-Host "source $source"
+    Write-Host "destination $destination"
 	$wc.DownloadFile($source, $destination)	
 }
 
